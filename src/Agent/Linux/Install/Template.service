@@ -1,0 +1,17 @@
+[Unit]
+Description={DESCRIPTION}
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+StartLimitInterval=0
+RemainAfterExit=no
+ExecStart={DIRECTORY}/{EXECNAME}
+WorkingDirectory={DIRECTORY}
+User={USER}
+Group={GROUP}
+Nice={NICENESS}
+
+[Install]
+WantedBy=default.target

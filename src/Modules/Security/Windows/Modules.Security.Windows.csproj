@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RuntimeFrameworkVersion>2.0.9</RuntimeFrameworkVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Deterministic>false</Deterministic>
+    <AssemblyName>ASCIoTAgent</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="DevScripts\SetupSecurityDevEnv.ps1" />
+    <None Remove="Install\InstallSecurityAgent.ps1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SecurityAssemblySharedInfo.cs" Link="SecurityAssemblySharedInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="DevScripts\SetupSecurityDevEnv.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Install\InstallSecurityAgent.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Agent\IoT\Agent.IoT.csproj" />
+    <ProjectReference Include="..\..\..\Agent\Windows\Agent.Windows.csproj" />
+    <ProjectReference Include="..\EventGenerators\Windows\Security.EventGenerators.Windows.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Microsoft.NETCore.App" Version="2.0.9" />
+  </ItemGroup>
+
+</Project>

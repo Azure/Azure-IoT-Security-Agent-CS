@@ -1,0 +1,5 @@
+{
+  "storeLocation": "",  // see System.Security.Cryptography.X509Certificates.StoreLocation for possible values
+  "storeName": "",      // see System.Security.Cryptography.X509Certificates.StoreName for possible values
+  "certificateThumbprint": ""
+}

@@ -1,0 +1,15 @@
+﻿{
+  "azureiot*com^securityAgentConfiguration^1*0*0": {
+    "verbosity": "low",
+    "maxNumberOfDailyMessages": 100,
+    "lowPriorityMessageFrequency": "PT10S",
+    "highPriorityMessageFrequency": "PT5S",
+    "maxLocalCacheSizeInBytes": 20000,
+    "maxMessageSizeInBytes": 2000,
+    "snapshotFrequency": "PT1M",
+    "hubResourceId": "SomeResourceId",
+    "eventPriorityFakeOperationalEvent": "Off",
+    "eventPriorityFakePeriodicEvent": "Off",
+    "eventPriorityFakeTriggeredEvent": "Off"
+  }
+}
