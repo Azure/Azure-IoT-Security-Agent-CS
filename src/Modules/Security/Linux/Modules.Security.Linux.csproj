@@ -1,0 +1,65 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>ASCIoTAgent</AssemblyName>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+	<RootNamespace>Microsoft.Azure.Security.IoT.Agent.Core.Linux</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Deterministic>false</Deterministic>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netcoreapp2.0\Security.Agent.Linux.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netcoreapp2.0\Security.Agent.Linux.xml</DocumentationFile>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <None Remove="DevScripts\SetupSecurityDevEnv.sh" />
+    <None Remove="Install\InstallSecurityAgent.sh" />
+    <None Remove="Security.Agent.Linux.csproj.projhash.userData" />
+    <None Remove="Security.Agent.Linux.csproj.projhash.userData.assemblies" />
+    <None Remove="Install\asotagentsudoers" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SecurityAssemblySharedInfo.cs" Link="SecurityAssemblySharedInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="DevScripts\SetupSecurityDevEnv.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Install\asotagentsudoers">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Install\InstallSecurityAgent.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\..\Agent\Linux\Install\CoreAgentInstallation.sh" Link="Install\CoreAgentInstallation.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Agent\Linux\Install\Template.service" Link="Install\Template.service">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\..\Agent\Linux\DevScripts\CoreSetupDevEnv.sh" Link="DevScripts\CoreSetupDevEnv.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Agent\IoT\Agent.IoT.csproj" />
+    <ProjectReference Include="..\EventGenerators\Linux\Security.EventGenerators.Linux.csproj" />
+  </ItemGroup>
+
+</Project>

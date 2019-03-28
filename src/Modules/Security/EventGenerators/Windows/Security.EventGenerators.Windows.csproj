@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RuntimeFrameworkVersion>2.0.9</RuntimeFrameworkVersion>
+    <RootNamespace>Microsoft.Azure.Security.IoT.Agent.EventGenerators.Windows</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Deterministic>false</Deterministic>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netcoreapp2.0\Security.EventGenerators.Windows.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netcoreapp2.0\EventGenerators.Windows.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="EventGenerators.Windows.csproj.projhash.userData" />
+    <None Remove="EventGenerators.Windows.csproj.projhash.userData.assemblies" />
+    <None Remove="Windows.csproj.projhash.userData" />
+    <None Remove="Windows.csproj.projhash.userData.assemblies" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\SecurityAssemblySharedInfo.cs" Link="SecurityAssemblySharedInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.Compatibility" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Agent\Core\Agent.Core.csproj" />
+    <ProjectReference Include="..\..\Common\Security.Common.csproj" />
+    <ProjectReference Include="..\..\Contracts\Events\Security.Events.csproj" />
+    <ProjectReference Include="..\Interop.NetFwTypeLib\Interop.NetFwTypeLib.csproj" />
+  </ItemGroup>
+
+</Project>

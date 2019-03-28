@@ -1,0 +1,11 @@
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(EnvironmentConfig)" />
+  <ItemGroup>
+    <ProjectFile Include="Agent\Common\Common.csproj" />
+    <ProjectFile Include="Agent\Linux\Linux.csproj" />
+    <ProjectFile Include="Agent\Windows\Windows.csproj" />
+    <ProjectFile Include="Agent\EventGenerators\Windows\Windows.csproj" />
+    <ProjectFile Include="Contracts\Events\Events.csproj" />
+  </ItemGroup>
+  <Import Project="$(ExtendedTargetsPath)\Traversal.targets" />
+</Project>

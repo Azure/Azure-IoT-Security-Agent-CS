@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RootNamespace>Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Deterministic>false</Deterministic>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netcoreapp2.0\Security.EventGenerators.Linux.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netcoreapp2.0\Security.EventGenerators.Linux.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="EventGenerators.Linux.csproj.projhash.userData" />
+    <None Remove="EventGenerators.Linux.csproj.projhash.userData.assemblies" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\SecurityAssemblySharedInfo.cs" Link="SecurityAssemblySharedInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Agent\Core\Agent.Core.csproj" />
+    <ProjectReference Include="..\..\Common\Security.Common.csproj" />
+  </ItemGroup>
+
+</Project>
