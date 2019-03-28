@@ -175,7 +175,13 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux.Audit
             {
                 if (TryGetPropertyValue(eventText, prop, out string match))
                 {
-                    messageData[prop] = EncodedAuditFieldsUtils.DecodeHexStringIfNeeded(match, Encoding.UTF8);
+                    string expectedValue;
+                    if (prop == AuditMessageProperty.SocketAddress)
+                        expectedValue = match; // In case of 'saddr', hex-encoded bytes are expected
+                    else
+                        expectedValue = EncodedAuditFieldsUtils.DecodeHexStringIfNeeded(match, Encoding.UTF8);
+
+                    messageData[prop] = expectedValue;
 
                     if (prop == AuditMessageProperty.ProcessArgCount && UInt32.TryParse(match, out uint argCount))
                     {
