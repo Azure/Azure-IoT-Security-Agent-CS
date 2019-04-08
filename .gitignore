@@ -330,4 +330,5 @@ ASALocalRun/
 .mfractor/
 
 # Release files
+!release
 !release/*.tar.gz
