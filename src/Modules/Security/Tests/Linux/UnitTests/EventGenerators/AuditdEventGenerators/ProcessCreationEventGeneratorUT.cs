@@ -38,7 +38,7 @@ namespace Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
         {
             SetupAusearchReturnValue(ProcessEvent);
 
-            var events = _generatorUnderTest.GetEvents();
+            var events = GeneratorUnderTest.GetEvents();
             events.ValidateSchema();
 
             Assert.AreEqual(2, events.Count());
@@ -75,7 +75,7 @@ namespace Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
             Assert.AreEqual(22, processCreationPayload.Time.Minute);
             Assert.AreEqual(32, processCreationPayload.Time.Second);
 
-            _mockedShell.VerifyAll();
+            MockedShell.VerifyAll();
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
         {
             SetupAusearchReturnValue(ManyArgumentsEvent);
 
-            var events = _generatorUnderTest.GetEvents();
+            var events = GeneratorUnderTest.GetEvents();
             events.ValidateSchema();
 
             Assert.AreEqual(1, events.Count());
@@ -107,7 +107,7 @@ namespace Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
             Assert.AreEqual(51, processCreationPayload.Time.Minute);
             Assert.AreEqual(4, processCreationPayload.Time.Second);
 
-            _mockedShell.VerifyAll();
+            MockedShell.VerifyAll();
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
         {
             SetupAusearchReturnValue(EncodedProcName);
 
-            var events = _generatorUnderTest.GetEvents();
+            var events = GeneratorUnderTest.GetEvents();
             events.ValidateSchema();
 
             Assert.AreEqual(1, events.Count());
@@ -139,7 +139,7 @@ namespace Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
             Assert.AreEqual(40, processCreationPayload.Time.Minute);
             Assert.AreEqual(19, processCreationPayload.Time.Second);
 
-            _mockedShell.VerifyAll();
+            MockedShell.VerifyAll();
         }
     }
 }

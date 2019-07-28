@@ -37,6 +37,9 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests.FakeEvents
         {
             return Events.ToList();
         }
+
+        /// <inheritdoc />
+        public void Dispose() { }
     }
 }
 

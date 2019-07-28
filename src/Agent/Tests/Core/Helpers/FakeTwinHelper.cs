@@ -8,7 +8,6 @@ using Microsoft.Azure.IoT.Agent.Core.Configuration;
 using Microsoft.Azure.IoT.Contracts.Events;
 using Newtonsoft.Json.Linq;
 using System.IO;
-using Microsoft.Azure.IoT.Agent.Core.MessageWorker.Clients;
 using Microsoft.Azure.IoT.Agent.IoT.Configuration;
 
 namespace Microsoft.Azure.IoT.Agent.Core.Tests.Helpers
@@ -48,7 +47,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests.Helpers
         public FakeTwinHelper(ModuleClientMock clientMock, string path)
         {
             _twin = GetTwinFromFile(path);
-            _agentConfiguration = _twin.Properties.Desired[IoTHubTwinConfigurationProvider<TestIotConfiguration>.ConfigSectionName];
+            _agentConfiguration = _twin.Properties.Desired["ms_iotn:urn_azureiot_Security_SecurityAgentConfiguration"];
             _clientMock = clientMock;
             _clientMock.Reset(_twin);
 
@@ -63,12 +62,17 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests.Helpers
         public FakeTwinHelper ChangeEventPriority(string eventName, EventPriority priority)
         {
             string propertyName = $"eventPriority{eventName}";
+            JObject existingConfiguration = _agentConfiguration.SelectToken(propertyName) as JObject;
             JValue newValue = new JValue(priority.ToString());
-            JToken existingToken = _agentConfiguration.SelectToken(propertyName);
-            if (existingToken != null)
-                existingToken.Replace(newValue);
+            if (existingConfiguration != null)
+            {
+                existingConfiguration["value"].Replace(newValue);
+            }
             else
-                ((JObject)_agentConfiguration).Add(propertyName, newValue);
+            {
+                JObject priorityObject = new JObject { new JProperty("value", newValue) };
+                ((JObject)_agentConfiguration).Add(propertyName, priorityObject);
+            }
 
             _clientMock.SetTwin(_twin);
             _clientMock.RaiseDesiredPropertyUpdateCallback(_twin.Properties.Desired, null);
@@ -83,7 +87,11 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests.Helpers
         /// <param name="value">The desired value</param>
         public FakeTwinHelper ChangeConfiguration(string configurationName, string value)
         {
-            _agentConfiguration[configurationName] = value;
+            JObject configuration = new JObject
+            {
+                new JProperty("value", value)
+            };
+            _agentConfiguration[configurationName] = configuration;
             _clientMock.SetTwin(_twin);
             _clientMock.RaiseDesiredPropertyUpdateCallback(_twin.Properties.Desired, null);
 
@@ -97,7 +105,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests.Helpers
         /// <returns></returns>
         public string GetConfiguration(string configurationName)
         {
-            return _agentConfiguration[configurationName].ToString();
+            return _agentConfiguration[configurationName]["value"].ToString();
         }
 
         /// <summary>

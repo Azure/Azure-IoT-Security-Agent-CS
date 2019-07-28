@@ -1,6 +1,8 @@
 ﻿// <copyright file="AuthenticationTestFromModule.cs" company="Microsoft">
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
+
+using System;
 using Microsoft.Azure.IoT.Agent.IoT.AuthenticationUtils;
 using Microsoft.Azure.IoT.Agent.Core.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,7 +20,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests.UnitTests.Authentication
         /// Test if empty file was supplied
         /// </summary>
         [TestMethod]
-        [ExpectedException(typeof(MisconfigurationException))]
+        [ExpectedException(typeof(ArgumentNullException))]
         public void TestEmptyFileConfiguration()
         {
             NameValueCollection validConfigCollection = new NameValueCollection()

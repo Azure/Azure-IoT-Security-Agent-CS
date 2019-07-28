@@ -2,10 +2,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 
-using Microsoft.Azure.IoT.Agent.Core.Exceptions;
 using System;
+using System.Collections.Specialized;
+using System.IO;
+using System.Reflection;
 
-namespace Microsoft.Azure.Security.IoT.Agent.Common.Utils
+namespace Microsoft.Azure.IoT.Agent.Core.Utils
 {
     /// <summary>
     /// Configuration related utilities
@@ -13,23 +15,29 @@ namespace Microsoft.Azure.Security.IoT.Agent.Common.Utils
     public static class ConfigurationUtils
     {
         /// <summary>
-        /// Read a symmetric key string from a given file
+        /// Appends the given path to the current process's path
         /// </summary>
-        /// <param name="filePath">file path for the symmetric key</param>
-        /// <returns>Symmetric key as it was provided in the File Path</returns>
-        /// <exception cref="MisconfigurationException">In case the file is empty</exception>
-        public static string GetSymmetricKeyFromFile(string filePath)
+        /// <param name="path">Relative path</param>
+        /// <returns>The combined path</returns>
+        public static string AppendToProcessPath(string path)
         {
-            //Read the connection string from the file:
-            string content = System.IO.File.ReadAllText(filePath);
-            char[] charsToTrim = Environment.NewLine.ToCharArray();
-            char[] whiteSpace = { ' ' };
-            string key = content.Trim(charsToTrim).Trim(whiteSpace);
-            if (string.IsNullOrEmpty(key))
-            {
-                throw new MisconfigurationException($"Could not read key from file: {filePath}");
-            }
-            return key;
+            Assembly executingAssembly = Assembly.GetExecutingAssembly();
+            string processDirectory = Path.GetDirectoryName(executingAssembly.Location);
+            string combined = Path.Combine(processDirectory, path);
+
+            return combined;
+        }
+
+        /// <remarks>
+        /// Should be replaced with Path.IsPathFullyQualified (introduced in .NET Core 2.1)
+        /// https://docs.microsoft.com/en-us/dotnet/api/system.io.path.ispathfullyqualified?view=netcore-2.1
+        /// </remarks>
+        public static bool IsFullyQualifiedPath(string path)
+        {
+            string fullPath = Path.GetFullPath(path);
+            bool result = fullPath.Equals(path);
+
+            return result;
         }
     }
 }

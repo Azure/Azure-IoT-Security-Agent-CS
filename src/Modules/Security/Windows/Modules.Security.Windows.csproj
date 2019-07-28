@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,6 +7,13 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Deterministic>false</Deterministic>
     <AssemblyName>ASCIoTAgent</AssemblyName>
+	  <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
+    <HighEntropyVA Condition="'$(HighEntropyVA)' == ''">true</HighEntropyVA>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,5 +44,7 @@
   <ItemGroup>
     <PackageReference Update="Microsoft.NETCore.App" Version="2.0.9" />
   </ItemGroup>
+  
+  <Import Project="..\..\..\Scripts\PublishAllRids.targets" />
 
 </Project>

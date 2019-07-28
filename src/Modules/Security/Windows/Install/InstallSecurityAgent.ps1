@@ -17,6 +17,10 @@
     The ID of the IoT device
 .PARAMETER CertificateLocationKind
 	The location of the certificate, can be either LocalFile if the certificate is located in a file, or Store if the certificate is located in the machine certificate store
+.PARAMETER IdScope
+	The ID Scope of the DPS service
+.PARAMETER RegistrationId
+	The registration ID of the device, as registered in the DPS service
 .EXAMPLE
 	.\InstallSecurityAgent.ps1 -Install -AuthenticationIdentity SecurityModule -AuthenticationMethod SymmetricKey -FilePath "C:\SymmetricKey.txt" -HostName "contoso-iot-hub.azure-devices.net" -DeviceId contoso1
 #>
@@ -26,22 +30,26 @@ param (
     [switch]
 	$Uninstall, 
 
+	[Parameter(Mandatory, ParameterSetName = "InstallDPS")]
 	[Parameter(Mandatory, ParameterSetName = "Install")]
     [switch]
 	$Install,
 
+	[Parameter(Mandatory, ParameterSetName = "InstallDPS")]
 	[Parameter(Mandatory, ParameterSetName = "Install")]
-    [ValidateSet("Device", "SecurityModule")]
+    [ValidateSet("Device", "SecurityModule", "DPS")]
 	[Alias("aui")]
 	[string]
 	$AuthenticationIdentity, 
 	
+	[Parameter(Mandatory, ParameterSetName = "InstallDPS")]
 	[Parameter(Mandatory, ParameterSetName = "Install")]
     [ValidateSet("SymmetricKey", "SelfSignedCertificate")]
 	[Alias("aum")]
 	[string]
 	$AuthenticationMethod,
 
+	[Parameter(Mandatory, ParameterSetName = "InstallDPS")]
 	[Parameter(Mandatory, ParameterSetName = "Install")]
 	[Alias("f")]
     [string]
@@ -57,6 +65,17 @@ param (
     [string]
 	$DeviceId,
 
+	[Parameter(Mandatory, ParameterSetName = "InstallDPS")]
+	[Alias("is")]
+    [string]
+	$IdScope,
+
+	[Parameter(Mandatory, ParameterSetName = "InstallDPS")]
+	[Alias("ri")]
+    [string]
+	$RegistrationId,
+
+	[Parameter(ParameterSetName = "InstallDPS")]
 	[Parameter(ParameterSetName = "Install")]
 	[ValidateSet("LocalFile", "Store")]
 	[Alias("cl")]
@@ -83,6 +102,8 @@ function UpdateSecurityConfiguration
     $authenticationConfigPath = "$PSScriptRoot\..\Authentication.config"
 	[System.Xml.Linq.XDocument]$authenticationXmlDoc = [System.Xml.Linq.XDocument]::Load($authenticationConfigPath)
 
+	SetAuthParameter $authenticationXmlDoc "idScope" $IdScope
+	SetAuthParameter $authenticationXmlDoc "registrationId" $RegistrationId
     SetAuthParameter $authenticationXmlDoc "deviceId" $DeviceId
     SetAuthParameter $authenticationXmlDoc "gatewayHostname" $HostName
     SetAuthParameter $authenticationXmlDoc "filePath" $FilePath
