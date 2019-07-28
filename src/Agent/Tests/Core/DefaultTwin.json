@@ -1,15 +1,31 @@
 ﻿{
-  "azureiot*com^securityAgentConfiguration^1*0*0": {
-    "verbosity": "low",
-    "maxNumberOfDailyMessages": 100,
-    "lowPriorityMessageFrequency": "PT10S",
-    "highPriorityMessageFrequency": "PT5S",
-    "maxLocalCacheSizeInBytes": 20000,
-    "maxMessageSizeInBytes": 2000,
-    "snapshotFrequency": "PT1M",
-    "hubResourceId": "SomeResourceId",
-    "eventPriorityFakeOperationalEvent": "Off",
-    "eventPriorityFakePeriodicEvent": "Off",
-    "eventPriorityFakeTriggeredEvent": "Off"
+  "ms_iotn:urn_azureiot_Security_SecurityAgentConfiguration": {
+    "lowPriorityMessageFrequency": {
+      "value": "PT10S"
+    },
+    "highPriorityMessageFrequency": {
+      "value": "PT5S"
+    },
+    "maxLocalCacheSizeInBytes": {
+      "value": 20000
+    },
+    "maxMessageSizeInBytes": {
+      "value": 2000
+    },
+    "snapshotFrequency": {
+      "value": "PT1M"
+    },
+    "hubResourceId": {
+      "value": "SomeResourceId"
+    },
+    "eventPriorityFakeOperationalEvent": {
+      "value": "Off"
+    },
+    "eventPriorityFakePeriodicEvent": {
+      "value": "Off"
+    },
+    "eventPriorityFakeTriggeredEvent": {
+      "value": "Off"
+    }
   }
 }

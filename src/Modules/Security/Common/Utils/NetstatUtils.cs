@@ -30,7 +30,7 @@ namespace Microsoft.Azure.Security.IoT.Agent.Common.Utils
         }
 
         private static readonly string[] Protocols = Enum.GetNames(typeof(NetstatProtocols));
-        private static readonly Regex AdressPortRegex = new Regex("^(.*):([\\d*]*)$");
+        private static readonly Regex AdressPortRegex = new Regex(@"^\[?([^\]]*)]?:([\d*]*)$");
         /// <summary>
         /// The method receieves an output of 'netstat' command
         /// It parse only the rows in "LISTEN" state

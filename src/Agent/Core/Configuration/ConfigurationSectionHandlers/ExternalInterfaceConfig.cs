@@ -4,10 +4,12 @@
 
 using System;
 using System.Collections.Specialized;
-using System.Reflection;
 
 namespace Microsoft.Azure.IoT.Agent.Core.Configuration.ConfigurationSectionHandlers
 {
+    /// <summary>
+    /// Configuration related to the agent's external interface
+    /// </summary>
     public class ExternalInterfaceConfig
     {
         /// <summary>
@@ -20,6 +22,9 @@ namespace Microsoft.Azure.IoT.Agent.Core.Configuration.ConfigurationSectionHandl
         /// </summary>
         public Type FacadeType { get; }
 
+        /// <summary>
+        /// Ctor
+        /// </summary>
         public ExternalInterfaceConfig(NameValueCollection nameValueCollection)
         {
             string facadeTypeName = nameValueCollection[FacadeTypeKey];

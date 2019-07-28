@@ -3,6 +3,7 @@
 // </copyright>
 using Microsoft.Azure.IoT.Agent.Core.Configuration;
 using System;
+using System.Reflection;
 
 namespace Microsoft.Azure.IoT.Agent.Core.MessageWorker.Clients
 {
@@ -21,22 +22,21 @@ namespace Microsoft.Azure.IoT.Agent.Core.MessageWorker.Clients
         /// </summary>
         private static IExternalInterface CreateInstance()
         {
-            IExternalInterface facade = (IExternalInterface)Activator.CreateInstance(
-                LocalConfiguration.ExternalInterface.FacadeType);
-
-            return facade;
+            try
+            {
+                IExternalInterface facade = (IExternalInterface) Activator.CreateInstance(LocalConfiguration.ExternalInterface.FacadeType);
+                return facade;
+            }
+            catch (TargetInvocationException ex) when (ex.InnerException != null)
+            {
+                throw ex.InnerException;
+            }
         }
 
         /// <summary>
         /// Gets the singleton instance
         /// </summary>
-        public static IExternalInterface Instance
-        {
-            get
-            {
-                return _instance.Value;
-            }
-        }
+        public static IExternalInterface Instance => _instance.Value;
 
         /// <summary>
         /// Disposes the singleton instance

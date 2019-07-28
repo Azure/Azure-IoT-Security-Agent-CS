@@ -20,7 +20,7 @@ namespace Microsoft.Azure.IoT.Contracts.Events
         where T : Payload
     {
         /// <inheritdoc />
-        public string Name => GetType().Name;
+        public virtual string Name => GetType().Name;
 
         /// <inheritdoc />
         [JsonConverter(typeof(StringEnumConverter))]

@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.Azure.IoT.Agent.IoT.Exceptions;
 
 namespace Tests.Common.UnitTests.Authentication
 {
@@ -131,7 +132,7 @@ namespace Tests.Common.UnitTests.Authentication
 
                 try
                 {
-                    Assert.ThrowsException<MisconfigurationException>(() => { using (var x = CertificateLoader.Load(AuthenticationMethodProvider.CertificateLocation.Store, _tempStoreInfoPath)) { } });
+                    Assert.ThrowsException<AgentException>(() => { using (var x = CertificateLoader.Load(AuthenticationMethodProvider.CertificateLocation.Store, _tempStoreInfoPath)) { } });
                 }
                 finally
                 {

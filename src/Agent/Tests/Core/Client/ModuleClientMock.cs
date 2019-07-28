@@ -149,5 +149,11 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests.Client
                 Reported = reported
             });
         }
+
+        /// <inheritdoc />
+        public void SetConnectionStatusChangesHandler(ConnectionStatusChangesHandler statusChangesHandler) {}
+
+        /// <inheritdoc />
+        public void ReInit(string connectionString, TransportType transportType) {}
     }
 }

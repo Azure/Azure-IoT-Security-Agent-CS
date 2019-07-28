@@ -78,7 +78,7 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Windows
                     _lastRetrievedEventTimeStamps[etwEvent] = etwEvents.First()[TimeGeneratedFieldName];
                 }
 
-                events.AddRange(etwEvents.Select( ev => EtwToIotEventConverters[etwEvent](ev)));
+                events.AddRange(etwEvents.Select( ev => EtwToIotEventConverters[etwEvent](ev)).Where(ev => ev != null));
             }
 
             return events;

@@ -35,7 +35,7 @@ namespace Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
         {
             SetupAusearchReturnValue(LoginEvent1);
 
-            var events = _generatorUnderTest.GetEvents();
+            var events = GeneratorUnderTest.GetEvents();
             events.ValidateSchema();
 
             Assert.AreEqual(1, events.Count());
@@ -50,7 +50,7 @@ namespace Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
             Assert.AreEqual(LoginResult.Success, loginEvent.Payload.First().Result);
             Assert.AreEqual(null, loginEvent.Payload.First().RemoteAddress);
 
-            _mockedShell.VerifyAll();
+            MockedShell.VerifyAll();
         }
     }
 }

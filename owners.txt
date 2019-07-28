@@ -1,0 +1,3 @@
+; Owners list
+kfbehar
+*azureiotsecuritydevs

@@ -6,7 +6,6 @@ using Microsoft.Azure.IoT.Agent.Core.Logging;
 using Microsoft.Azure.IoT.Agent.Core.MessageWorker.Clients;
 using Microsoft.Azure.IoT.Contracts.Events;
 using System;
-using System.Collections.Generic;
 
 namespace Microsoft.Azure.IoT.Agent.Core.Configuration
 {
@@ -73,11 +72,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Configuration
         {
             get
             {
-                //If init() was not called - throw exception
-                if (!_isInitialized)
-                {
-                    throw new InvalidOperationException($"{nameof(RemoteConfiguration)} was called before AgentConfiguration initialization");
-                }
+                EnsureInitialized();
                 return _remoteConfiguration;
             }
             set
@@ -94,27 +89,31 @@ namespace Microsoft.Azure.IoT.Agent.Core.Configuration
         /// </summary>
         /// <typeparam name="TEvent">The name of the event</typeparam>
         /// <returns>EventPriority</returns>
-        /// <exception cref="MisconfigurationException">In case the event name is not defined in EventPrioritiesConfiguration</exception>
+        /// <exception cref="ArgumentOutOfRangeException">In case the event name is not defined in EventPrioritiesConfiguration</exception>
         /// <exception cref="InvalidOperationException">In case the method was called before Init() was called - should not happen in a normal flow of the agent</exception>
         public static EventPriority GetEventPriority<TEvent>() where TEvent : IEvent
         {
-            //If init() was not called - throw exception
-            if (!_isInitialized)
-            {
-                throw new InvalidOperationException("GetEventPriority was called before AgentConfiguration initialization");
-            }
-
+            EnsureInitialized();
             //Get the event property
             var eventType = _remoteConfiguration.GetType().GetProperty(typeof(TEvent).Name);
             if (eventType == null)
             {
-                throw new MisconfigurationException($"TwinConfiguration error: Couldn't find priority configuration for: {typeof(TEvent).Name}");
+                throw new ArgumentOutOfRangeException(paramName: $"{nameof(EventPriority)}",
+                    message: $"TwinConfiguration error: Couldn't find priority configuration for: {typeof(TEvent).Name}");
             }
 
             EventPriority eventPriority = (EventPriority)eventType.GetValue(_remoteConfiguration);
 
             SimpleLogger.Debug($"Event {eventType} has event priority {eventPriority}");
             return eventPriority;
+        }
+
+        private static void EnsureInitialized()
+        {
+            if (!_isInitialized)
+            {
+                throw new InvalidOperationException($"{nameof(RemoteConfiguration)} was called before AgentConfiguration initialization");
+            }
         }
 
         private static void OnAgentConfigurationChanged(RemoteConfiguration remoteConfiguration)

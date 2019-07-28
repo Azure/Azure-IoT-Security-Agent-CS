@@ -1,6 +1,8 @@
 ﻿// <copyright file="AuthenticationTestFromDevice.cs" company="Microsoft">
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
+
+using System;
 using Microsoft.Azure.IoT.Agent.IoT.AuthenticationUtils;
 using Microsoft.Azure.IoT.Agent.Core.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,7 +20,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests.UnitTests.Authentication
         /// Verify that Gateway cannot be empty
         /// </summary>
         [TestMethod]
-        [ExpectedException(typeof(MisconfigurationException))]
+        [ExpectedException(typeof(ArgumentNullException))]
         public void TestEmptyGatewayConfiguration()
         {
             NameValueCollection invalidConfigCollection = new NameValueCollection()
@@ -37,7 +39,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests.UnitTests.Authentication
         /// Verify device file cannot be empty in case of certificate
         /// </summary>
         [TestMethod]
-        [ExpectedException(typeof(MisconfigurationException))]
+        [ExpectedException(typeof(ArgumentNullException))]
         public void TestEmptyDeviceConfiguration()
         {
             NameValueCollection invalidConfigCollection = new NameValueCollection()

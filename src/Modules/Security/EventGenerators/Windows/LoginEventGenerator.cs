@@ -11,6 +11,7 @@ using Microsoft.Azure.Security.IoT.Contracts.Events.Events;
 using Microsoft.Azure.Security.IoT.Contracts.Events.Payloads;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using static Microsoft.Azure.Security.IoT.Agent.EventGenerators.Windows.Utils.SystemEventUtils;
 using static Microsoft.Azure.Security.IoT.Contracts.Events.Payloads.LoginPayload;
@@ -71,42 +72,63 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Windows
 
         private IEvent ConvertSystemEventToLoginSuccessEvent(Dictionary<string, string> loginEvent)
         {
-            string userName = GetEventPropertyFromMessage(loginEvent[MessageFieldName], AccountNameFieldName, 1);
-            string domain = GetEventPropertyFromMessage(loginEvent[MessageFieldName], AccountDomainFieldName, 1);
-            return new Login(Priority, new LoginPayload()
+            Login returnedEvent = null;
+            var loginType = (WindowsLoginTypes)int.Parse(GetEventPropertyFromMessage(loginEvent[MessageFieldName], LogonTypeFieldName));
+            if (IsUserLoginType(loginType))
             {
-                ProcessId = Convert.ToUInt32(GetEventPropertyFromMessage(loginEvent[MessageFieldName], ProcessIdFieldName), 16),
-                UserName = domain + @"\" + userName,
-                UserId = GetSidFromUsername(userName),
-                Operation = GetEventPropertyFromMessage(loginEvent[MessageFieldName], LogonProcessFieldName),
-                Executable = GetEventPropertyFromMessage(loginEvent[MessageFieldName], ProcessNameFieldName),
-                RemoteAddress = GetEventPropertyFromMessage(loginEvent[MessageFieldName], SourceNetworkAddressFieldName),
-                RemotePort = GetEventPropertyFromMessage(loginEvent[MessageFieldName], SourcePortFieldName),
-                Result = LoginResult.Success,
-                ExtraDetails = new Dictionary<string, string>() { { AccountDomainExtraDetailsKey, domain } }
-            }, DateTime.Parse(loginEvent[TimeGeneratedFieldName]));
+                string userName = GetEventPropertyFromMessage(loginEvent[MessageFieldName], AccountNameFieldName, 1);
+                string domain = GetEventPropertyFromMessage(loginEvent[MessageFieldName], AccountDomainFieldName, 1);
+                returnedEvent = new Login(Priority, new LoginPayload()
+                {
+                    ProcessId = Convert.ToUInt32(GetEventPropertyFromMessage(loginEvent[MessageFieldName], ProcessIdFieldName), 16),
+                    UserName = domain + @"\" + userName,
+                    UserId = GetSidFromUsername(userName),
+                    Operation = GetEventPropertyFromMessage(loginEvent[MessageFieldName], LogonProcessFieldName),
+                    Executable = GetEventPropertyFromMessage(loginEvent[MessageFieldName], ProcessNameFieldName),
+                    RemoteAddress = GetEventPropertyFromMessage(loginEvent[MessageFieldName], SourceNetworkAddressFieldName),
+                    RemotePort = GetEventPropertyFromMessage(loginEvent[MessageFieldName], SourcePortFieldName),
+                    Result = LoginResult.Success,
+                    ExtraDetails = new Dictionary<string, string>() { { AccountDomainExtraDetailsKey, domain } }
+                }, DateTime.Parse(loginEvent[TimeGeneratedFieldName]));
+            }
+
+            return returnedEvent;
         }
 
         private Login ConvertSystemEventToLoginFailureEvent(Dictionary<string, string> loginEvent)
         {
-            string userName = GetEventPropertyFromMessage(loginEvent[MessageFieldName], AccountNameFieldName, 1);
-            string domain = GetEventPropertyFromMessage(loginEvent[MessageFieldName], AccountDomainFieldName, 1);
-            return new Login(Priority, new LoginPayload()
+            Login returnedEvent = null;
+            var loginType = (WindowsLoginTypes)int.Parse(GetEventPropertyFromMessage(loginEvent[MessageFieldName], LogonTypeFieldName, 1));
+            if (IsUserLoginType(loginType))
             {
-                ProcessId = Convert.ToUInt32(GetEventPropertyFromMessage(loginEvent[MessageFieldName], CallerProcessIdFieldName), 16),
-                UserName = domain + @"\" + userName,
-                UserId = GetSidFromUsername(userName),
-                Operation = GetEventPropertyFromMessage(loginEvent[MessageFieldName], LogonProcessFieldName),
-                Executable = GetEventPropertyFromMessage(loginEvent[MessageFieldName], CallerProcessNameFieldName),
-                RemoteAddress = GetEventPropertyFromMessage(loginEvent[MessageFieldName], SourceNetworkAddressFieldName),
-                RemotePort = GetEventPropertyFromMessage(loginEvent[MessageFieldName], SourcePortFieldName),
-                Result = LoginResult.Fail,
-                ExtraDetails = new Dictionary<string,string>()
+                string userName = GetEventPropertyFromMessage(loginEvent[MessageFieldName], AccountNameFieldName, 1);
+                string domain = GetEventPropertyFromMessage(loginEvent[MessageFieldName], AccountDomainFieldName, 1);
+                returnedEvent = new Login(Priority, new LoginPayload()
                 {
-                    { AccountDomainExtraDetailsKey, domain },
-                    { FailureReasonExtraDetailsKey, GetEventPropertyFromMessage(loginEvent[MessageFieldName], FailureReasonFieldName) }
-                }
-            }, DateTime.Parse(loginEvent[TimeGeneratedFieldName]));
+                    ProcessId = Convert.ToUInt32(GetEventPropertyFromMessage(loginEvent[MessageFieldName], CallerProcessIdFieldName), 16),
+                    UserName = domain + @"\" + userName,
+                    UserId = GetSidFromUsername(userName),
+                    Operation = GetEventPropertyFromMessage(loginEvent[MessageFieldName], LogonProcessFieldName),
+                    Executable = GetEventPropertyFromMessage(loginEvent[MessageFieldName], CallerProcessNameFieldName),
+                    RemoteAddress = GetEventPropertyFromMessage(loginEvent[MessageFieldName], SourceNetworkAddressFieldName),
+                    RemotePort = GetEventPropertyFromMessage(loginEvent[MessageFieldName], SourcePortFieldName),
+                    Result = LoginResult.Fail,
+                    ExtraDetails = new Dictionary<string,string>()
+                    {
+                        { AccountDomainExtraDetailsKey, domain },
+                        { FailureReasonExtraDetailsKey, GetEventPropertyFromMessage(loginEvent[MessageFieldName], FailureReasonFieldName) }
+                    }
+                }, DateTime.Parse(loginEvent[TimeGeneratedFieldName]));
+            }
+
+            return returnedEvent;
+        }
+
+        private bool IsUserLoginType(WindowsLoginTypes loginType)
+        {
+            return loginType == WindowsLoginTypes.Interactive || loginType == WindowsLoginTypes.Network || 
+                   loginType == WindowsLoginTypes.Unlock || loginType == WindowsLoginTypes.NetworkCleartext || 
+                   loginType == WindowsLoginTypes.RemoteInteractive || loginType == WindowsLoginTypes.CachedInteractive;
         }
     }
 }

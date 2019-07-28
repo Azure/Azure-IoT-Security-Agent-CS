@@ -20,8 +20,15 @@ namespace Agent.Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
     [TestClass]
     public abstract class AuditdUnitTestBase : UnitTestBase
     {
-        protected AuditEventGeneratorBase _generatorUnderTest;
-        protected Mock<IProcessUtil> _mockedShell;
+        /// <summary>
+        /// The generator currently being tested
+        /// </summary>
+        protected AuditEventGeneratorBase GeneratorUnderTest { get; private set; }
+
+        /// <summary>
+        /// Mock object for shell interaction
+        /// </summary>
+        protected Mock<IProcessUtil> MockedShell { get; private set; }
 
         /// <summary>
         /// Delegate for creating a new instance of derived type.
@@ -38,8 +45,8 @@ namespace Agent.Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
         public override void Init()
         {
             base.Init();
-            _mockedShell = new Mock<IProcessUtil>();
-            _generatorUnderTest = CreateInstance(_mockedShell.Object);
+            MockedShell = new Mock<IProcessUtil>();
+            GeneratorUnderTest = CreateInstance(MockedShell.Object);
         }
 
         /// <summary>
@@ -50,11 +57,11 @@ namespace Agent.Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
         {
             SetupAusearchReturnValue("");
 
-            var events = _generatorUnderTest.GetEvents();
+            var events = GeneratorUnderTest.GetEvents();
             events.ValidateSchema();
 
             Assert.AreEqual(0, events.Count());
-            _mockedShell.VerifyAll();
+            MockedShell.VerifyAll();
         }
 
         /// <summary>
@@ -63,7 +70,7 @@ namespace Agent.Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
         [TestMethod]
         public void TestExceptionIsThrownIfNoAuditdIsInstalled()
         {
-            _mockedShell.Setup(m => m.ExecuteProcess(
+            MockedShell.Setup(m => m.ExecuteProcess(
                     It.IsAny<string>(),
                     It.Is<string>(cmd => cmd.Contains("auditctl") || cmd.Contains("ausearch")),
                     It.IsAny<ErrorHandler>(),
@@ -72,7 +79,7 @@ namespace Agent.Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
 
             Assert.ThrowsException<CommandExecutionFailedException>(() =>
             {
-                var instance = CreateInstance(_mockedShell.Object);
+                var instance = CreateInstance(MockedShell.Object);
                 instance.GetEvents();
             });
         }
@@ -83,7 +90,7 @@ namespace Agent.Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
         [TestMethod]
         public void TestAusearchFallbackIsExecuted()
         {
-            _mockedShell.SetupSequence(m => m.ExecuteProcess(
+            MockedShell.SetupSequence(m => m.ExecuteProcess(
                     It.IsAny<string>(),
                     It.Is<string>(cmd => cmd.Contains("ausearch")),
                     It.IsAny<ErrorHandler>(),
@@ -91,20 +98,23 @@ namespace Agent.Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
                 .Throws(new CommandExecutionFailedException("ausearch cmd", 10, "malformed checkpoint"))
                 .Returns("");
 
-            var events = _generatorUnderTest.GetEvents();
+            var events = GeneratorUnderTest.GetEvents();
             events.ValidateSchema();
 
-            _mockedShell.Verify(m => m.ExecuteProcess(It.IsAny<string>(),
+            MockedShell.Verify(m => m.ExecuteProcess(It.IsAny<string>(),
                 It.Is<string>(cmd => cmd.Contains("ausearch") && !cmd.Contains("-ts")), It.IsAny<ErrorHandler>(),
                 It.IsAny<IEnumerable<int>>()));
-            _mockedShell.Verify(m => m.ExecuteProcess(It.IsAny<string>(),
+            MockedShell.Verify(m => m.ExecuteProcess(It.IsAny<string>(),
                 It.Is<string>(cmd => cmd.Contains("ausearch") && cmd.Contains("-ts")), It.IsAny<ErrorHandler>(),
                 It.IsAny<IEnumerable<int>>()));
         }
 
+        /// <summary>
+        /// Setup a return value for the ausearch command on the mocked shell member
+        /// </summary>
         protected void SetupAusearchReturnValue(string returnValue)
         {
-            _mockedShell.Setup(m => m.ExecuteProcess(
+            MockedShell.Setup(m => m.ExecuteProcess(
                     It.IsAny<string>(),
                     It.Is<string>(cmd => cmd.Contains("ausearch")),
                     It.IsAny<ErrorHandler>(),

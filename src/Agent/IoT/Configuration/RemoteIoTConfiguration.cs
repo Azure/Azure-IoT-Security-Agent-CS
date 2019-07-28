@@ -20,6 +20,7 @@ namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
         /// It should always be included in the remote configuration (??)
         /// </summary>
         [DefaultValue("")]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
         [JsonProperty(PropertyName = "hubResourceId", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
         public string HubResourceId { get; set; }
     }
