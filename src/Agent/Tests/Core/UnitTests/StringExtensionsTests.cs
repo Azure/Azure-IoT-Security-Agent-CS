@@ -3,6 +3,7 @@
 // </copyright>
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Azure.IoT.Agent.Core.Utils;
+using System;
 
 namespace Microsoft.Azure.IoT.Agent.Core.Tests.UnitTests
 {
@@ -49,9 +50,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests.UnitTests
             [TestMethod]
             public void ShouldSplitOnNewLines()
             {
-                string input = @"a
-b
-c";
+                string input = $"a{Environment.NewLine}b{Environment.NewLine}c";
 
                 string[] result = input.SplitStringOnNewLine();
                 Assert.AreEqual(3, result.Length);
@@ -66,12 +65,7 @@ c";
             [TestMethod]
             public void ShouldIgnoreEmptyLines()
             {
-                string input = @"a
-
-
-b
-
-c";
+                string input = $"a{Environment.NewLine}{Environment.NewLine}{Environment.NewLine}b{Environment.NewLine}{Environment.NewLine}c";
 
                 string[] result = input.SplitStringOnNewLine();
                 Assert.AreEqual(3, result.Length);

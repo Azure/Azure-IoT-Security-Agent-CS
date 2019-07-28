@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,6 +8,13 @@
     <Deterministic>false</Deterministic>
     <RootNamespace>Modules.Security.WindowsIoTCore</RootNamespace>
     <AssemblyName>ASCIoTAgent</AssemblyName>
+	  <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
+    <HighEntropyVA Condition="'$(HighEntropyVA)' == ''">true</HighEntropyVA>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
   </PropertyGroup>
 
   <ItemGroup>
@@ -43,4 +50,6 @@
     </Content>
   </ItemGroup>
 
+  <Import Project="..\..\..\Scripts\PublishAllRids.targets" />
+	
 </Project>

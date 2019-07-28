@@ -50,6 +50,7 @@ namespace Microsoft.Azure.IoT.Agent.Windows
             //_agent = new MultiThreadedAgent();
             _agent = new SingleThreadedAgent();
             _agent.Start();
+            Stop();
         }
     }
 }

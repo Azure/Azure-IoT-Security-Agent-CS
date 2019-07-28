@@ -18,8 +18,24 @@ namespace Microsoft.Azure.IoT.Agent.Core.Logging
     /// </summary>
     public static class SimpleLogger
     {
-        private static readonly object LogFileLock = new object();
-        private static StreamWriter _logFileStreamWriter = new StreamWriter(LocalConfiguration.General.LogFilePath);
+        private static readonly object _logFileLock;
+        private static StreamWriter _logFileStreamWriter;
+        private static LogLevel _fileLogLevel;
+        private static LogLevel _logLevel;
+        private static bool _logFileInitialized;
+        private static DiagnosticVerbosity _diagnosticVerbosity;
+        private static string _logFilePath;
+
+        private static string ResolveLogFilePath()
+        {
+            string path = LocalConfiguration.General.LogFilePath;
+
+            if (ConfigurationUtils.IsFullyQualifiedPath(path))
+                return path;
+
+            string resolvedPath = ConfigurationUtils.AppendToProcessPath(path);
+            return resolvedPath;
+        }
 
         /// <summary>
         /// Log a debug message
@@ -82,7 +98,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Logging
             if (_logFileStreamWriter == null)
                 return;
 
-            lock (LogFileLock)
+            lock (_logFileLock)
             {
                 if (_logFileStreamWriter == null)
                     return;
@@ -108,32 +124,46 @@ namespace Microsoft.Azure.IoT.Agent.Core.Logging
                     "tried logging a message with severity [off], something went terribly wrong https://www.youtube.com/watch?v=t3otBjVZzT0");
             }
 
-            if (LocalConfiguration.General.LogLevel < level)
+            if (_logLevel < level)
                 return;
 
             Guid correlationId = ThreadContext.Get().ExecutionId;
 
             string formattedMessage = exception == null ? message : exception.FormatExceptionMessage(message);
             string logLine = $"{DateTime.Now} | CorrelationId: {correlationId} | {level.ToString()}: {formattedMessage}";
-
             Trace.WriteLine(logLine);
 
-            if (LocalConfiguration.General.FileLogLevel >= level)
+            if (_fileLogLevel >= level && _logFileInitialized)
             {
-                lock (LogFileLock)
+                lock (_logFileLock)
                 {
-                    _logFileStreamWriter.WriteLine(logLine);
-                    _logFileStreamWriter.Flush();
+                    _logFileStreamWriter?.WriteLine(logLine);
+                    _logFileStreamWriter?.Flush();
                 }
             }
 
             if (AgentConfiguration.IsInitialized())
             {
-                if (LocalConfiguration.General.DiagnosticVerbosityLevel == DiagnosticVerbosity.All ||
-                    (LocalConfiguration.General.DiagnosticVerbosityLevel == DiagnosticVerbosity.Some && sendAsDiagnostic))
+                if (_diagnosticVerbosity == DiagnosticVerbosity.All || _diagnosticVerbosity == DiagnosticVerbosity.Some && sendAsDiagnostic)
                 {
                     SendDiagnosticEvent(formattedMessage, level, correlationId);
                 }
+            }
+        }
+
+        static SimpleLogger()
+        {
+            _logFileLock = new object();
+            if (!TryInitLoggerFromLocalConfiguration())
+            {
+                _fileLogLevel = LogLevel.Off;
+                _logLevel = LogLevel.Fatal;
+                _diagnosticVerbosity = DiagnosticVerbosity.None;
+            }
+
+            if (_fileLogLevel != LogLevel.Off)
+            {
+                _logFileInitialized = InitLogFile(_logFilePath);
             }
         }
 
@@ -155,6 +185,37 @@ namespace Microsoft.Azure.IoT.Agent.Core.Logging
             }
 
             SystemEvents.DispatchDiagnosicEvent(message, level);
+        }
+
+        private static bool InitLogFile(string path)
+        {
+            try
+            {
+                _logFileStreamWriter = new StreamWriter(path);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError($"Could not init log file at path: {path}, exception: {ex}");
+                return false;
+            }
+        }
+
+        private static bool TryInitLoggerFromLocalConfiguration()
+        {
+            try
+            {
+                _logLevel = LocalConfiguration.General.LogLevel;
+                _logFilePath = ResolveLogFilePath();
+                _fileLogLevel = LocalConfiguration.General.FileLogLevel;
+                _diagnosticVerbosity = LocalConfiguration.General.DiagnosticVerbosityLevel;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError($"Could not init logger configuration: {ex}");
+                return false;
+            }
         }
     }
 }

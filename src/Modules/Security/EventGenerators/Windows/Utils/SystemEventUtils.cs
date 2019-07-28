@@ -37,6 +37,7 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Windows.Utils
         public const string DestinationAddressFieldName = "Destination Address";
         public const string DestinationPortFieldName = "Destination Port";
         public const string ProtocolFieldName = "Protocol";
+        public const string LogonTypeFieldName = "Logon Type";
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
         /// <summary>

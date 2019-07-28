@@ -1,7 +1,7 @@
 ﻿// <copyright file="AuthenticationMethodProviderFromDevice.cs" company="Microsoft">
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
-using Microsoft.Azure.IoT.Agent.Core.Exceptions;
+
 using Microsoft.Azure.IoT.Agent.IoT.Exceptions;
 using Microsoft.Azure.IoT.Agent.IoT.RestApis;
 using Newtonsoft.Json.Linq;
@@ -53,21 +53,6 @@ namespace Microsoft.Azure.IoT.Agent.IoT.AuthenticationUtils
             //We do not want to include the SDK in the project so we extract the specific parameters we need
             string primaryKey = moduleJToken["authentication"]["symmetricKey"]["primaryKey"].ToString();
             return CreateModuleConnectionString(AuthenticationData.GatewayHostName, AuthenticationData.DeviceId, primaryKey);
-        }
-
-        /// <summary>
-        /// Validate the AuthenticationConfigurationData as it arrived from the configuration
-        /// </summary>
-        /// <param name="authenticationData">AuthenticationConfigurationData</param>
-        /// <exception cref="MisconfigurationException"></exception>
-        public override void ValidateConfiguration(AuthenticationData authenticationData)
-        {
-            if (string.IsNullOrEmpty(authenticationData.GatewayHostName) ||
-                string.IsNullOrEmpty(authenticationData.DeviceId) ||
-                string.IsNullOrEmpty(authenticationData.FilePath))
-            {
-                throw new MisconfigurationException("FilePath Gateway and device ID cannot be empty");
-            }
         }
     }
 }

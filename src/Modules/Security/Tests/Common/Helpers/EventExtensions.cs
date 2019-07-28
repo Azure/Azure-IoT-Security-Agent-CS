@@ -47,7 +47,7 @@ namespace Security.Tests.Common.Helpers
         private static string GetDefaultSchemaLocation()
         {
             var currentLocation = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            return Path.Combine(GetAncestorDirectory(currentLocation, 8), "SecurityMessageSchema", "messageRoot.json");
+            return Path.Combine(GetAncestorDirectory(currentLocation, 8), "Azure-IoT-Security/security_message/schemas", "messageRoot.json");
         }
 
         private static string GetAncestorDirectory(string directory, int levelsToGoUp)
