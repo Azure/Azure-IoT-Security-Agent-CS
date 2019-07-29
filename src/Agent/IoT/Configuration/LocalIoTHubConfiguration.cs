@@ -1,9 +1,12 @@
 ﻿// <copyright file="LocalIoTHubConfiguration.cs" company="Microsoft">
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
+
+using System;
 using Microsoft.Azure.IoT.Agent.IoT.AuthenticationUtils;
 using System.Collections.Specialized;
 using System.Configuration;
+using Microsoft.Azure.IoT.Agent.Core.Exceptions;
 
 namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
 {
@@ -15,8 +18,40 @@ namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
         /// <summary>
         /// Authentication related configuration
         /// </summary>
-        public static AuthenticationData Authentication => new AuthenticationData(ConfigurationManager.GetSection("Authentication") as NameValueCollection);
+        public static AuthenticationData Authentication { get; }
 
-        public static IoTInterfaceConfig IotInterface => new IoTInterfaceConfig(ConfigurationManager.GetSection("ExternalInterface") as NameValueCollection);
+        /// <summary>
+        /// IoT interface related configuration
+        /// </summary>
+        public static IoTInterfaceConfig IotInterface { get; }
+
+        static LocalIoTHubConfiguration()
+        {
+            try
+            {
+                Authentication = new AuthenticationData(ConfigurationManager.GetSection("Authentication") as NameValueCollection);
+            }
+            catch (ArgumentNullException ex)
+            {
+                throw new AgentException(ExceptionCodes.Authentication, ExceptionSubCodes.MissingConfiguration, $"Key: {ex.ParamName}");
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                throw new AgentException(ExceptionCodes.Authentication, ExceptionSubCodes.CantParseConfiguration, $"Key: {ex.ParamName}");
+            }
+
+            try
+            {
+                IotInterface = new IoTInterfaceConfig(ConfigurationManager.GetSection("ExternalInterface") as NameValueCollection);
+            }
+            catch (ArgumentNullException ex)
+            {
+                throw new AgentException(ExceptionCodes.LocalConfiguration, ExceptionSubCodes.MissingConfiguration, $"Key: {ex.ParamName}");
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                throw new AgentException(ExceptionCodes.LocalConfiguration, ExceptionSubCodes.CantParseConfiguration, $"Key: {ex.ParamName}");
+            }
+        }
     }
 }

@@ -72,7 +72,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.EventGeneration
                         ErrorType = ConfigurationErrorType.TypeMismatch,
                         ConfigurationName = nameof(RemoteConfiguration),
                         UsedConfiguration = AgentConfiguration.RemoteConfiguration.ToString(),
-                        Message = $"Couldn't parse the following configurations: {string.Join(",", mismatchedTypeConfigurations)}"
+                        Message = $"Couldn't parse the following configurations: {string.Join(", ", mismatchedTypeConfigurations)}"
                     }
                 }
             );

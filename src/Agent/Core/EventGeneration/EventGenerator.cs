@@ -17,5 +17,8 @@ namespace Microsoft.Azure.IoT.Agent.Core.EventGeneration
 
         /// <inheritdoc />
         public abstract IEnumerable<IEvent> GetEvents();
+
+        /// <inheritdoc />
+        public virtual void Dispose() { }
     }
 }

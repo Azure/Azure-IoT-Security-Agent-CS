@@ -3,7 +3,8 @@
 // </copyright>
 
 using Microsoft.Azure.Devices.Client;
-using Microsoft.Azure.IoT.Agent.Core.Configuration;
+using Microsoft.Azure.IoT.Agent.Core.Logging;
+using Microsoft.Azure.IoT.Agent.Core.Utils;
 using Microsoft.Azure.IoT.Agent.IoT.AuthenticationUtils;
 using Microsoft.Azure.IoT.Agent.IoT.Configuration;
 using Microsoft.Azure.IoT.Agent.IoT.MessageWorker.Clients;
@@ -58,10 +59,32 @@ namespace Microsoft.Azure.IoT.Agent.IoT.Providers
 
                 return (IModuleClient) Activator.CreateInstance(type);
             }
-         
-            return new ModuleClientWrapper(ModuleClient.CreateFromConnectionString(
+
+            var client = ModuleClient.CreateFromConnectionString(
                 AuthenticationMethodProvider.GetModuleConnectionString(),
-                LocalIoTHubConfiguration.IotInterface.TransportType));
+                LocalIoTHubConfiguration.IotInterface.TransportType);
+
+            client.SetConnectionStatusChangesHandler(ConnectionStatusChangedCallback);
+
+            return new ModuleClientWrapper(client);
+        }
+
+        private static void ConnectionStatusChangedCallback(ConnectionStatus status, ConnectionStatusChangeReason reason)
+        {
+            SimpleLogger.Debug($"Client connection Status: {status}, reason: {reason}");
+            if (status != ConnectionStatus.Connected && LocalIoTHubConfiguration.Authentication.Identity == AuthenticationMethodProvider.AuthenticationIdentity.DPS)
+            {
+                SimpleLogger.Debug($"Client disconnected, trying to reprovision");
+
+                var threeStageBackoff = new ThreeStageBackoff(10, TimeSpan.FromSeconds(1), 10, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(10));
+                Retry.Do(() =>
+                {
+                    _client.ReInit(AuthenticationMethodProvider.GetNewModuleConnectionString(), LocalIoTHubConfiguration.IotInterface.TransportType);
+                    _client.OpenAsync().Wait();
+                }, threeStageBackoff);
+
+                _client.SetConnectionStatusChangesHandler(ConnectionStatusChangedCallback);
+            }
         }
     }
 }  

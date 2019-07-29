@@ -1,0 +1,29 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# Use text conventions for commonly used text extensions.
+*.csv text
+*.ini text
+*.json text
+*.txt text
+*.xml text
+
+# Force linux files to be with linux new line style (i.e \n)
+src/Agent/Linux/BaselineExecutables/*.xml  text eol=lf
+src/Agent/Linux/Install/* text eol=lf
+src/Agent/Linux/DevScripts/* text eol=lf
+src/Modules/Security/Linux/Install/* text eol=lf
+src/Modules/Security/Linux/DevScripts/* text eol=lf
+
+# Denote all files that are truly binary and should not be modified.
+*.dll binary
+*.exe binary
+*.gz binary
+*.ico binary
+*.jpg binary
+*.lib binary
+*.pdb binary
+*.pdf binary
+*.png binary
+*.wim binary
+*.zip binary

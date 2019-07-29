@@ -1,8 +1,12 @@
 ﻿// <copyright file="DevicesApi.cs" company="Microsoft">
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
+
+using System.Net;
+using Microsoft.Azure.IoT.Agent.Core.Exceptions;
 using Microsoft.Azure.IoT.Agent.Core.Logging;
 using Microsoft.Azure.IoT.Agent.IoT.Configuration;
+using Microsoft.Azure.IoT.Agent.IoT.Exceptions;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.IoT.Agent.IoT.RestApis
@@ -41,16 +45,32 @@ namespace Microsoft.Azure.IoT.Agent.IoT.RestApis
         /// <param name="moduleName">the module name we are looking for</param>
         /// <returns>JToken of the Module or null if no module was returned</returns>
         public JToken GetDeviceAgentModule(string deviceId, string moduleName)
-        {           
+        {
             string url = $"https://{_restClient.GatewayHostname}/devices/{deviceId}/modules/{moduleName}?{ApiVersion}";
             SimpleLogger.Debug($"Sending GetDeviceModule to URL: {url}");
-            string response = _restClient.SendGetRequest(url);
-            JToken moduleJtoken = null;
-            if (!string.IsNullOrEmpty(response))
+            try
             {
-                moduleJtoken = JToken.Parse(response);
+                HttpStatusCode status = _restClient.SendGetRequest(url, out string response);
+
+                if (status == HttpStatusCode.Unauthorized)
+                    throw new AgentException(ExceptionCodes.Authentication, ExceptionSubCodes.Unauthorized, "Validate authentication configuration");
+                if (status == HttpStatusCode.NotFound)
+                    throw new AgentException(ExceptionCodes.Authentication, ExceptionSubCodes.NotFound, "Validate authentication configuration");
+                if (status != HttpStatusCode.OK)
+                    throw new AgentException(ExceptionCodes.Authentication, ExceptionSubCodes.Other, response);
+
+                JToken moduleJtoken = null;
+                if (!string.IsNullOrEmpty(response))
+                {
+                    moduleJtoken = JToken.Parse(response);
+                }
+
+                return moduleJtoken;
             }
-            return moduleJtoken;
+            catch (WebException ex)
+            {
+                throw new AgentException(ExceptionCodes.Authentication, ExceptionSubCodes.Other, $"Couldn't get module from IoThub, error: {ex.Message}");
+            }
         }
 
         private readonly RestClient _restClient;
