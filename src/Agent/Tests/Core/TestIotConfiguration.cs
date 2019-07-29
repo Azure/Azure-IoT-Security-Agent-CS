@@ -5,6 +5,7 @@ using Microsoft.Azure.IoT.Agent.IoT.Configuration;
 using Microsoft.Azure.IoT.Contracts.Events;
 using Newtonsoft.Json;
 using System.ComponentModel;
+using Microsoft.Azure.IoT.Agent.Core.Configuration;
 
 namespace Microsoft.Azure.IoT.Agent.Core.Tests
 {
@@ -15,6 +16,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests
         /// Fake heartbeat event with its default priority
         /// </summary>
         [DefaultValue("Low")]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
         [JsonProperty(PropertyName = "eventPriorityFakeOperationalEvent", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
         public EventPriority FakeOperationalEvent { get; set; }
 
@@ -22,6 +24,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests
         /// Fake periodic event with its default priority
         /// </summary>
         [DefaultValue("Low")]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
         [JsonProperty(PropertyName = "eventPriorityFakePeriodicEvent", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
         public EventPriority FakePeriodicEvent { get; set; }
 
@@ -29,6 +32,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests
         /// Fake triggered event with its default priority
         /// </summary>
         [DefaultValue("Low")]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
         [JsonProperty(PropertyName = "eventPriorityFakeTriggeredEvent", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
         public EventPriority FakeTriggeredEvent { get; set; }
     }

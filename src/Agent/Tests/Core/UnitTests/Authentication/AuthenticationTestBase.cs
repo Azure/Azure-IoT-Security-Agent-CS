@@ -1,12 +1,15 @@
 ﻿// <copyright file="AuthenticationTestBase.cs" company="Microsoft">
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
+
+using System;
 using Agent.Tests.Common.UnitTests.Authentication;
 using Microsoft.Azure.IoT.Agent.Core.Exceptions;
 using Microsoft.Azure.IoT.Agent.IoT.AuthenticationUtils;
 using Microsoft.Azure.IoT.Agent.IoT.RestApis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Specialized;
+using Microsoft.Azure.IoT.Agent.IoT.Exceptions;
 
 namespace Microsoft.Azure.IoT.Agent.Core.Tests.UnitTests.Authentication
 {
@@ -51,7 +54,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests.UnitTests.Authentication
         /// Currently Module authentication does not support certificate 
         /// </summary>
         [TestMethod]
-        [ExpectedException(typeof(MisconfigurationException))]
+        [ExpectedException(typeof(AgentException))]
         public void TestNotSupportedConfiguration()
         {
             NameValueCollection invalidConfigCollection = new NameValueCollection()
@@ -74,7 +77,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests.UnitTests.Authentication
         /// Test that File path is not empty
         /// </summary>
         [TestMethod]
-        [ExpectedException(typeof(MisconfigurationException))]
+        [ExpectedException(typeof(ArgumentNullException))]
         public void TestEmptyFileConfigurationFromDevice()
         {
             NameValueCollection invalidConfigCollection = new NameValueCollection()
@@ -121,9 +124,9 @@ namespace Microsoft.Azure.IoT.Agent.Core.Tests.UnitTests.Authentication
             }
             else
             {
-                throw new MisconfigurationException("Not supported identity");
+                throw new ArgumentOutOfRangeException(paramName: "identity", message: "Not supported identity");
             }
-            authenticationMethodProvider.ValidateConfiguration(_authData);
+
             var connectionString = authenticationMethodProvider.GetConnectionString();
             return connectionString;
         }

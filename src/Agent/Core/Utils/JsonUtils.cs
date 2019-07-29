@@ -17,24 +17,21 @@ namespace Microsoft.Azure.IoT.Agent.Core.Utils
         /// <summary>
         /// Remove keys in the Json object that has null values
         /// </summary>
-        /// <param name="token"></param>
+        /// <param name="jObject">the json object to handle</param>
         /// <returns>the given JToken with no keys that have null values</returns>
-        public static JToken RemoveKeysWithNullValue(JToken token)
+        public static JObject RemoveKeysWithNullValue(JObject jObject)
         {
             JObject resObject = new JObject();
-            if (token.Type == JTokenType.Object)
+            foreach (JProperty prop in jObject.Children<JProperty>())
             {
-                foreach (JProperty prop in token.Children<JProperty>())
+                JToken node = prop.Value;
+                if (node is JObject && node.HasValues)
                 {
-                    JToken node = prop.Value;
-                    if (node.HasValues)
-                    {
-                        node = RemoveKeysWithNullValue(node);
-                    }
-                    if (!IsEmpty(node))
-                    {
-                        resObject.Add(prop.Name, node);
-                    }
+                    node = RemoveKeysWithNullValue((JObject)node);
+                }
+                if (!IsEmpty(node))
+                {
+                    resObject.Add(prop.Name, node);
                 }
             }
             return resObject;

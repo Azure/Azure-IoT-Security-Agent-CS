@@ -13,6 +13,7 @@ using System;
 using System.Threading;
 using System.Linq;
 using Microsoft.Azure.IoT.Contracts.Events;
+using System.Collections.Generic;
 
 namespace Microsoft.Azure.IoT.Agent.Core
 {
@@ -32,11 +33,15 @@ namespace Microsoft.Azure.IoT.Agent.Core
         protected volatile bool IsDisposed;
 
         /// <summary>
+        /// List of the event generators to be used by the agent;
+        /// </summary>
+        protected List<IEventGenerator> EventGenerators;
+
+        /// <summary>
         /// Ctor - creates a new agent harness object
         /// </summary>
         protected AgentBase()
         {
-            SimpleLogger.Information("Agent is initializing...", sendAsDiagnostic: true);
             //Does not trigger on Windows due to bug https://github.com/dotnet/coreclr/issues/8565
             AppDomain.CurrentDomain.ProcessExit += Stop;
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
@@ -51,16 +56,22 @@ namespace Microsoft.Azure.IoT.Agent.Core
             //Load the agent configurations
             try
             {
+                SimpleLogger.Information("Agent is initializing...", sendAsDiagnostic: true);
                 AgentConfiguration.Init();
+                var eventGeneratorsProvider = new AppConfigEventGeneratorsProvider();
+                EventGenerators = eventGeneratorsProvider.GetAll();
+                SimpleLogger.Information("Agent is initialized!");
+                //Call derived class to perform their initializations/start
+                DoOnStart();
             }
-            catch (Exception ex)
+            catch (AgentException ex)
             {
-                throw new AgentFailedToStartException("The agent can not be started", ex);
+                SimpleLogger.Fatal($"ASC for IoT agent encountered an error! {ex.Message}");
             }
-       
-            //Call derived class to perform their initializations/start
-            DoOnStart();
-
+            catch (TypeInitializationException ex) when (ex.InnerException is AgentException)
+            {
+                SimpleLogger.Fatal($"ASC for IoT agent encountered an error! {ex.InnerException.Message}");
+            }
         }
 
         /// <summary>
@@ -69,12 +80,10 @@ namespace Microsoft.Azure.IoT.Agent.Core
         /// <param name="scheduler">The scheduler to setup the event generators in</param>
         protected void SetupEventGenerators(TaskScheduler scheduler)
         {
-            var eventGeneratorsProvider = new AppConfigEventGeneratorsProvider();
-            var generators = eventGeneratorsProvider.GetAll();
             DateTime timeToStartTask = DateTime.UtcNow;
-            TimeSpan timeSpanBetweenGeneratorInvocation = new TimeSpan(LocalConfiguration.General.ProducerInterval.Ticks / generators.Count());
+            TimeSpan timeSpanBetweenGeneratorInvocation = new TimeSpan(LocalConfiguration.General.ProducerInterval.Ticks / EventGenerators.Count());
 
-            foreach (var generator in generators)
+            foreach (var generator in EventGenerators)
             {
                 EventProducer producer = new EventProducer(generator);
                 scheduler.AddTask(producer, LocalConfiguration.General.ProducerInterval, timeToStartTask);
@@ -122,6 +131,7 @@ namespace Microsoft.Azure.IoT.Agent.Core
             if (disposing && !IsDisposed)
             {
                 IsDisposed = true;
+                EventGenerators?.ForEach(eg => eg.Dispose());
                 AppDomain.CurrentDomain.ProcessExit -= Stop;
                 AppDomain.CurrentDomain.UnhandledException -= UnhandledExceptionHandler;
                 ExternalInterfaceFacade.DisposeInstance();

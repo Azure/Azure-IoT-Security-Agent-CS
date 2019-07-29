@@ -28,6 +28,7 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         private const string FilterTableName = "filter";
 
         private const string InputChain = "INPUT";
+        private const string ForwardChain = "FORWARD";
         private const string OutputChain = "OUTPUT";
 
         private readonly bool _isIptablesExist;
@@ -59,25 +60,22 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
             var returnedEvents = new List<IEvent>();
             if (!_isIptablesExist)
             {
-                SimpleLogger.Warning($"{GetType().Name}: Iptables does not exist on this device");
-                returnedEvents.Add(new FirewallConfiguration(Priority));
+                SimpleLogger.Error($"{GetType().Name}: Could not collect iptables rules");
                 return returnedEvents;
             }
 
-            string iptablesSaveOutput = _processUtil.ExecuteBashShellCommand(IpTablesSaveCommand);
-            if (string.IsNullOrEmpty(iptablesSaveOutput))
-            {
-                SimpleLogger.Warning(
-                    $"{GetType().Name}: Can't get Iptables data, check permission or iptables is not configured on this machine");
-                returnedEvents.Add(new FirewallConfiguration(Priority));
-                return returnedEvents;
-            }
+            string iptablesSaveOutput = _processUtil.ExecuteBashShellCommand(IpTablesSaveCommand) ?? string.Empty;
+            string[] filterTable = GetIptablesTableSection(iptablesSaveOutput, FilterTableName) ?? new string[] {};
 
-            string[] filterTable = GetIptablesTableSection(iptablesSaveOutput, FilterTableName);
-
-            var snapshot = IptablesChain.GetChainsFromTable(filterTable ?? new string[] {})
+            var snapshot = IptablesChain.GetChainsFromTable(filterTable)
                 .SelectMany(ParseChainFromTable)
                 .ToArray();
+
+            if (snapshot.Length == 0)
+            {
+                //If no rules defined on the machine, send default tables
+                snapshot = GetDefaultTableRules();
+            }
 
             returnedEvents.Add(new FirewallConfiguration(Priority, snapshot));
             return returnedEvents;
@@ -139,6 +137,33 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
             values.Add(val);
 
             return string.Join(",", values.Where(str => str != null));
+        }
+
+        private FirewallRulePayload[] GetDefaultTableRules()
+        {
+            return new []
+            {
+                new FirewallRulePayload
+                {
+                    Priority = 0,
+                    Action = FirewallRulePayload.Actions.Allow,
+                    ChainName = InputChain,
+                    Direction = FirewallRulePayload.Directions.In
+                },
+                new FirewallRulePayload
+                {
+                    Priority = 0,
+                    Action = FirewallRulePayload.Actions.Allow,
+                    ChainName = OutputChain,
+                    Direction =  FirewallRulePayload.Directions.Out
+                },
+                new FirewallRulePayload
+                {
+                    Priority = 0,
+                    Action = FirewallRulePayload.Actions.Allow,
+                    ChainName = ForwardChain,
+                }
+            };
         }
     }
 }

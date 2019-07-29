@@ -121,7 +121,7 @@ COMMIT
         /// Validates a no-payload event is sent if filter table is not configured.
         /// </summary>
         [TestMethod]
-        public void TestEmptyEventIfFilterTableIsNotConfigured()
+        public void TestDefaultEventIfFilterTableIsNotConfigured()
         {
             _mockedShell
                 .Setup(m => m.ExecuteProcess(
@@ -134,7 +134,8 @@ COMMIT
             var events = _genertorUnderTest.GetEvents();
             events.ValidateSchema();
 
-            ValidateNoPayloadEvent(events.ToList());
+            ValidateDefaultTableEvent(events);
+
             _mockedShell.Verify(m => m.ExecuteProcess(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ErrorHandler>(),
                 It.IsAny<IEnumerable<int>>()), Times.Exactly(2));
         }
@@ -143,7 +144,7 @@ COMMIT
         /// Verifies that no events are created if ip tables does not exist on the machine
         /// </summary>
         [TestMethod]
-        public void TestEmptyEventIfIpTablesNotExist()
+        public void TestEventIfIpTablesNotExist()
         {
             var mockedShell = new Mock<IProcessUtil>();
             mockedShell.Setup(m => m.ExecuteProcess(
@@ -155,9 +156,8 @@ COMMIT
             var genertorUnderTest = new FirewallConfigurationSnapshotGenerator(mockedShell.Object);
 
             var events = genertorUnderTest.GetEvents();
-            events.ValidateSchema();
 
-            ValidateNoPayloadEvent(events.ToList());
+            Assert.AreEqual(0, events.Count());
 
             mockedShell.Verify(util => util.ExecuteProcess(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ErrorHandler>(),
                         It.IsAny<IEnumerable<int>>()),Times.Exactly(1));
@@ -167,7 +167,7 @@ COMMIT
         /// Verifes empty event is created if no rules are configured
         /// </summary>
         [TestMethod]
-        public void TestNoEvent()
+        public void TestDefaultEvent()
         {
             _mockedShell
                 .Setup(m => m.ExecuteProcess(
@@ -180,7 +180,8 @@ COMMIT
             var events = _genertorUnderTest.GetEvents();
             events.ValidateSchema();
 
-            ValidateNoPayloadEvent(events.ToList());
+            ValidateDefaultTableEvent(events);
+
             _mockedShell.Verify(m => m.ExecuteProcess(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ErrorHandler>(),
                         It.IsAny<IEnumerable<int>>()),Times.Exactly(2));
         }
@@ -256,12 +257,20 @@ COMMIT
                         It.IsAny<IEnumerable<int>>()),Times.Exactly(2));
         }
 
-        private void ValidateNoPayloadEvent(IList<IEvent> events)
+        private void ValidateDefaultTableEvent(IEnumerable<IEvent> events)
         {
             Assert.AreEqual(1, events.Count());
-            var payload = events.Cast<FirewallConfiguration>().Select(x => x.Payload).First();
-            Assert.AreEqual(0, payload.Count());
-            Assert.AreEqual(true, events.First().IsEmpty);
+            var payload = events.Cast<FirewallConfiguration>().Select(x => x.Payload).First().ToList();
+            Assert.AreEqual(3, payload.Count());
+            Assert.AreEqual(1, payload
+                .Where(rulePayload => rulePayload.Direction == FirewallRulePayload.Directions.In)
+                .Count(rulepayload => rulepayload.Action == FirewallRulePayload.Actions.Allow));
+            Assert.AreEqual(1, payload
+                .Where(rulePayload => rulePayload.Direction == null)
+                .Count(rulepayload => rulepayload.Action == FirewallRulePayload.Actions.Allow));
+            Assert.AreEqual(1, payload
+                .Where(rulePayload => rulePayload.Direction == FirewallRulePayload.Directions.Out)
+                .Count(rulepayload => rulepayload.Action == FirewallRulePayload.Actions.Allow));
         }
 
         private void ValidateSimpleTable(IList<FirewallRulePayload> firewallPayloads)

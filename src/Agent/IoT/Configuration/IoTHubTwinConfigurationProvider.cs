@@ -12,7 +12,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Azure.Devices.Client.Exceptions;
+using Microsoft.Azure.IoT.Agent.IoT.Exceptions;
 using Newtonsoft.Json.Converters;
 
 namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
@@ -35,7 +38,7 @@ namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
         /// <summary>
         /// The name of the configuration section in the twin
         /// </summary>
-        public const string ConfigSectionName = "azureiot*com^securityAgentConfiguration^1*0*0";
+        public readonly string ConfigSectionName;
 
         /// <summary>
         /// The iot hub module client
@@ -51,11 +54,12 @@ namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
 
             _moduleClient = ModuleClientProvider.GetClient();
             _moduleClient.SetDesiredPropertyUpdateCallbackAsync(OnDesiredPropertyUpdateCallback, null);
+            ConfigSectionName = LocalIoTHubConfiguration.IotInterface.RemoteConfigurationObject;
         }
 
         /// <summary>
         /// Event handler for DesiredProperty updates from the remote twin
-        /// Updates current local <see cref="TRemoteConfiguration"/>
+        /// Raises the <see cref="RemoteConfigurationChanged"/> event
         /// </summary>
         private Task OnDesiredPropertyUpdateCallback(TwinCollection desiredProperties, object userContext)
         {
@@ -67,7 +71,7 @@ namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
             }
             catch (Exception ex)
             {
-                SimpleLogger.Error("Twin syntax error. configuration was not changed", exception: ex);  
+                SimpleLogger.Error("Twin syntax error. configuration was not changed", exception: ex);
                 return Task.CompletedTask;
             }
 
@@ -82,7 +86,7 @@ namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
         {
             TwinCollection twinCollection = GetTwinCollection();
             TRemoteConfiguration twinConfiguration = ReadTwinConfiguration(twinCollection);
-    
+
             return twinConfiguration;
         }
 
@@ -91,33 +95,34 @@ namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
         /// </summary>
         private TRemoteConfiguration ReadTwinConfiguration(TwinCollection desiredProperties)
         {
-            try
+            JObject readyToDeserializeTwinConfiguration = GetAgentConfigurationObjectFromTwin(desiredProperties);
+            TRemoteConfiguration twinConfiguration = DeserializeTwin(readyToDeserializeTwinConfiguration, out List<string> errors);
+
+            if (errors.Any())
             {
-                JToken readyToDeserializeTwinConfiguration = PrepareTwinForDeserialization(desiredProperties);
-                TRemoteConfiguration twinConfiguration = DeserializeTwin(readyToDeserializeTwinConfiguration);
-                return twinConfiguration;
+                OnFailedToParseConfiguration(errors);
+                throw new AgentException(ExceptionCodes.RemoteConfiguration, ExceptionSubCodes.CantParseConfiguration, $"Can't parse the following properties: {string.Join(", ", errors)}");
             }
-            catch (RemoteConfigurationParsingException ex)
-            {
-                OnFailedToParseConfiguration(ex.MisconfiguredProperties);
-                throw;
-            }
+
+            return twinConfiguration;
         }
 
         /// <summary>
         /// Reads and prepares the agentConfiguration section for deserialization 
         /// </summary>
-        private JToken PrepareTwinForDeserialization(TwinCollection twinConfCollection)
+        private JObject GetAgentConfigurationObjectFromTwin(TwinCollection desiredProperties)
         {
-            JObject configSection = GetConfigurationSection(twinConfCollection);
-
-            if (configSection == null)
+            if (desiredProperties.Contains(ConfigSectionName))
             {
-                throw new RemoteConfigurationParsingException(new List<string>() { ConfigSectionName });
+                JObject configSection = desiredProperties[ConfigSectionName];
+                if (configSection != null)
+                {
+                    //remove null values from the json
+                    return HandleNullValues(configSection);
+                }
             }
 
-            //remove null values from the json
-            return HandleNullValues(configSection);
+            return new JObject();
         }
 
         /// <summary>
@@ -128,9 +133,22 @@ namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
         private TwinCollection GetTwinCollection()
         {
             var twinTask = IotHubMessagingClient.Instance.GetTwinAsync();
-            if (!twinTask.Wait(LocalConfiguration.General.ReadRemoteConfigurationTimeout))
+            bool isConfigurationRead;
+            try
             {
-                throw new TimeoutException("Failed to read security module twin in time");
+                isConfigurationRead = twinTask.Wait(LocalConfiguration.General.ReadRemoteConfigurationTimeout);
+            }
+            catch (AggregateException ex) when (ex.InnerException is DeviceNotFoundException)
+            {
+                throw new AgentException(ExceptionCodes.Authentication, ExceptionSubCodes.NotFound, "Validate authentication configuration");
+            }
+            catch (AggregateException ex) when (ex.InnerException is UnauthorizedException)
+            {
+                throw new AgentException(ExceptionCodes.Authentication, ExceptionSubCodes.Unauthorized, "Validate authentication configuration");
+            }
+            if (!isConfigurationRead)
+            {
+                throw new AgentException(ExceptionCodes.RemoteConfiguration, ExceptionSubCodes.Timeout, "Failed to read security module twin in time");
             }
 
             Twin twin = twinTask.Result;
@@ -139,40 +157,23 @@ namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
         }
 
         /// <summary>
-        /// Get the configuration section from the twin
-        /// </summary>
-        /// <param name="twinCollection">The twin collection</param>
-        /// <returns>A JToken representing the configuration section</returns>
-        /// <exception cref="MissingFieldException">In case the twin doesn't contain agentConfiguration section</exception>
-        private JObject GetConfigurationSection(TwinCollection twinCollection)
-        {
-            foreach (KeyValuePair<string, Object> child in twinCollection)
-            {
-                if (child.Key == ConfigSectionName)
-                    return child.Value as JObject;
-            }
-
-            throw new MisconfigurationException($"The twin doesn't contain {ConfigSectionName} section");
-        }
-
-        /// <summary>
         /// Remove keys with null values
         /// </summary>
-        /// <param name="jtoken"></param>
+        /// <param name="jObject"></param>
         /// <returns></returns>
-        private JToken HandleNullValues(JToken jtoken)
+        private JObject HandleNullValues(JObject jObject)
         {
-            JToken noNullConfigSection = JsonUtils.RemoveKeysWithNullValue(jtoken);
+            JObject noNullConfigSection = JsonUtils.RemoveKeysWithNullValue(jObject);
             return noNullConfigSection;
         }
 
         /// <summary>
         /// Deserialize agent twin configuration,
-        /// throws if can't deserialize
         /// </summary>
         /// <param name="readyToDeserializeTwinConfiguration">ready to deserialize twin json</param>
+        /// <param name="outError">List of properties that could not be parsed</param>
         /// <returns>TwinConfiguration</returns>
-        private TRemoteConfiguration DeserializeTwin(JToken readyToDeserializeTwinConfiguration)
+        private TRemoteConfiguration DeserializeTwin(JToken readyToDeserializeTwinConfiguration, out List<string> outError)
         {
             var serializer = new JsonSerializer();
             var errorList = new List<string>();
@@ -183,14 +184,9 @@ namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
             };
 
             serializer.Converters.Add(new IsoTimespanConverter());
-
             var deserializedTwin = readyToDeserializeTwinConfiguration.ToObject<TRemoteConfiguration>(serializer);
 
-            if (errorList.Count != 0)
-            {
-                throw new RemoteConfigurationParsingException(errorList);
-            }
-
+            outError = errorList;
             return deserializedTwin;
         }
 

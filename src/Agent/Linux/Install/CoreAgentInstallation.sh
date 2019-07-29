@@ -13,7 +13,24 @@ _nice=10
 
 usage()
 {
-    echo "usage: InstallAgent $_usageDescriptionExtension[-i | -u] | [-h]]"
+    scriptName=`basename "$0"`
+
+	echo "Utility script for installing and uninstalling the agent."
+	echo ""
+	echo "Usage:"
+	echo "  $scriptName -i$_installUsageExtendedDescription [-n <niceness level>]"
+	echo "  $scriptName -u"
+	echo "  $scriptName -h"
+	echo ""
+	echo "Options:"
+	echo "  -i   --install                    Install the agent."
+	echo "  -u   --uninstall                  Uninstall the agent."
+	echo "  -h   --help                       Show this screen."
+	echo "  -n   --nice                       Niceness (priority) level of the service."
+
+	if [ "$_optionsExtendedDescription" != "" ]; then
+		echo -e "$_optionsExtendedDescription"
+	fi
 }
 
 wgetAndExitOnFail()

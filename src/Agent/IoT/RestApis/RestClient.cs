@@ -4,7 +4,6 @@
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.IoT.Agent.Core.Logging;
 using Microsoft.Azure.IoT.Agent.IoT.AuthenticationUtils;
-using Microsoft.Azure.Security.IoT.Agent.Common.Utils;
 using System;
 using System.IO;
 using System.Net;
@@ -13,8 +12,7 @@ using System.Security.Cryptography.X509Certificates;
 namespace Microsoft.Azure.IoT.Agent.IoT.RestApis
 {
     /// <summary>
-    /// RestClient implements rest communication to the IoT hub
-    /// Currently support only GET request
+    /// RestClient implements rest communication to the IoT hub or DPS service
     /// </summary>
     public class RestClient
     {
@@ -36,8 +34,11 @@ namespace Microsoft.Azure.IoT.Agent.IoT.RestApis
                 case AuthenticationMethodProvider.AuthenticationType.SymmetricKey:
                     {
                         // Getting a specific module using REST with SAS token authentication
-                        string key = ConfigurationUtils.GetSymmetricKeyFromFile(authenticationData.FilePath);
-                        string sasToken = GenerateSaSToken(key, authenticationData.GatewayHostName, TimeSpan.FromMinutes(_sasTokenTtl));
+                        string key = AuthenticationFileUtils.GetBase64EncodedSymmetricKeyFromFile(authenticationData.FilePath);
+                        string keyTarget = authenticationData.Identity == AuthenticationMethodProvider.AuthenticationIdentity.Device ?
+                                authenticationData.GatewayHostName :                                                // Device Sas Token
+                                $"{authenticationData.IdScope}/registrations/{authenticationData.RegistrationId}";  // DPS Sas Token
+                        string sasToken = GenerateSaSToken(key, keyTarget, TimeSpan.FromMinutes(_sasTokenTtl));
                         var restClient = new RestClient(authenticationData.GatewayHostName, sasToken);
                         return restClient;
                     }
@@ -98,25 +99,62 @@ namespace Microsoft.Azure.IoT.Agent.IoT.RestApis
         /// Sends "GET" request to the gateway to the given URL
         /// </summary>
         /// <param name="url">url for the rest request</param>
+        /// <param name="responseContent"></param>
         /// <returns></returns>
-        public string SendGetRequest(string url)
+        public HttpStatusCode SendGetRequest(string url, out string responseContent)
         {
-            string responseString;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             request.Method = GetRequest;
-            SetAuthenticationHeader(request);
             SimpleLogger.Debug("Send get request to url: " + url);
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            return SendHttpRequest(request, out responseContent);
+        }
+
+        /// <summary>
+        /// Sends "POST" request to the gateway to the given URL
+        /// </summary>
+        /// <param name="url">url for the rest request</param>
+        /// <param name="jsonString">the request content</param>
+        /// <param name="responseContent"></param>
+        /// <returns></returns>
+        public HttpStatusCode SendPostRequest(string url, string jsonString, out string responseContent)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Method = PostRequest;
+            request.ContentType = JsonContent;
+            using (var streamWriter = new StreamWriter(request.GetRequestStream()))
+            {
+                streamWriter.Write(jsonString);
+            }
+            SimpleLogger.Debug("Send post request to url: " + url);
+            SimpleLogger.Debug("Request content:\n" + jsonString);
+            return SendHttpRequest(request, out responseContent);
+        }
+
+        private HttpStatusCode SendHttpRequest(HttpWebRequest request, out string responseContent)
+        {
+            SetAuthenticationHeader(request);
+            try
+            {
+                using (HttpWebResponse response = (HttpWebResponse) request.GetResponse())
+                {
+                    return HandleResponse(response, out responseContent);
+                }
+            }
+            catch (WebException ex) when (ex.Response is HttpWebResponse)
+            {
+                var response = (HttpWebResponse) ex.Response;
+                return HandleResponse(response, out responseContent);
+            }
+        }
+
+        private HttpStatusCode HandleResponse(HttpWebResponse response, out string responseContent)
+        {
             using (Stream stream = response.GetResponseStream())
             using (StreamReader reader = new StreamReader(stream))//stream cannot be null, otherwise an exception was thrown 
             {
-                responseString = reader.ReadToEnd();
-                if (response.StatusCode != HttpStatusCode.OK)
-                {
-                    SimpleLogger.Error($"Get request failed, StatusCode: {response.StatusCode}, response: {responseString}");
-                }
+                responseContent = reader.ReadToEnd();
+                return response.StatusCode;
             }
-            return responseString;
         }
 
         /// <summary>
@@ -140,6 +178,7 @@ namespace Microsoft.Azure.IoT.Agent.IoT.RestApis
         private readonly X509Certificate2 _certificate;
         private readonly string _sasToken;
         private const string GetRequest = "GET";
-
+        private const string PostRequest = "POST";
+        private const string JsonContent = "application/json";
     }
 }

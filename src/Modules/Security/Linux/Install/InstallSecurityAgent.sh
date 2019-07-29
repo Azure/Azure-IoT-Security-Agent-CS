@@ -1,6 +1,5 @@
 #!/bin/bash
 
-_usageDescriptionExtension="[[-aui <authentication identity> ] [[-aum <authentication method> ] [[-f <file path> ] [[-hn <host name> ] [[-di <device id> ] [[-cl <certificate location kind> ]]"
 _sudoersTemplateName="asotagentsudoers"
 _sudoersIncludeDirectory="/etc/sudoers.d"
 _baselineExecutableLocationTemplate="/BaselineExecutables/"
@@ -16,7 +15,19 @@ _filePath=
 _gwFqdn=
 _deviceId=
 _certificateLocationKind=
+_idScope=
+_registrationId=
 _scriptDir=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+_installUsageExtendedDescription=" -aui <authentication identity> -aum <authentication method> -f <file path> -hn <host name> -di <device id> [-cl <certificate location kind>]"
+_optionsExtendedDescription="\
+  -aui --authentication-identity    The authentication identity used by the agent (SecurityModule, Device or DPS).\n\
+  -aum --authentication-method      The authentication method used by the agent (SymmetricKey or SelfSignedCertificate).\n\
+  -f   --file-path                  Path to a file from which data related to the authentication method should be read (the key, certificate or certificate-from-store-info JSON).\n\
+  -hn  --host-name                  IoT hub's host name.\n\
+  -di  --device-id                  Id of the device the agent is beind installed on (as defined in the IoT hub).\n\
+  -cl  --certificate-location-kind  Location kind of certificate being used (LocalFile or Store). Applicable only when the authentication method is set to SelfSignedCertificate.\n\
+  -is  --id-scope					The ID Scope of the DPS service\n\
+  -ri  --registration-id			The registration ID of the device, as registered in the DPS service"
 
 uninstallSecurityAgent()
 {
@@ -32,6 +43,68 @@ uninstallSecurityAgent()
 
 installSecurityAgent()
 {
+    shouldExit=false
+    
+	if [ -z "$_authenticationIdentity" ]
+    then
+		echo "authentication-identity not provided"
+        shouldExit=true
+	fi
+
+    if [ -z "$_authenticationType" ]
+    then
+		echo "authentication-method not provided"
+        shouldExit=true
+	fi
+
+	if [ $_authenticationType == 'SelfSignedCertificate' ]
+	then
+		if [ -z "$_certificateLocationKind" ]
+		then 
+			echo "certificate-location-kind not provided"
+			shouldExit=true
+		fi
+	fi
+
+	if [ -z "$_filePath" ]
+	then 
+		echo "file-path not provided"
+        shouldExit=true
+	fi
+
+	if [ $_authenticationIdentity == 'DPS' ]
+	then
+		if [ -z "$_idScope" ]
+		then 
+			echo "id-scope not provided"
+			shouldExit=true
+		fi
+
+		if [ -z "$_registrationId" ]
+		then 
+			echo "registration-id not provided"
+			shouldExit=true
+		fi
+	else
+		if [ -z "$_gwFqdn" ]
+		then 
+			echo "host-name not provided"
+			shouldExit=true
+		fi
+
+		if [ -z "$_deviceId" ]
+		then 
+			echo "device-id not provided"
+			shouldExit=true
+		fi
+	fi
+
+    if $shouldExit
+    then 
+        echo "cannot intall the agent, please check the validity of the supplied parameters"
+        exit 1
+    fi
+    
 	#Get oms executables according to systems architecture
 	baselineDir="$_scriptDir/../$_baselineDirName"
 	mkdir -p $baselineDir
@@ -59,10 +132,15 @@ installSecurityAgent()
     sed -i -e "s|\"identity\"\s*value=\"[^\"]*\"|\"identity\" value=\"$_authenticationIdentity\"|g" $_targetDirectory/Authentication.config 
 	sed -i -e "s|\"type\"\s*value=\"[^\"]*\"|\"type\" value=\"$_authenticationType\"|g" $_targetDirectory/Authentication.config 
     sed -i -e "s|\"filePath\"\s*value=\"[^\"]*\"|\"filePath\" value=\"$_filePath\"|g" $_targetDirectory/Authentication.config 
-	sed -i -e "s|\"gatewayHostname\"\s*value=\"[^\"]*\"|\"gatewayHostname\" value=\"$_gwFqdn\"|g" $_targetDirectory/Authentication.config 
-    sed -i -e "s|\"deviceId\"\s*value=\"[^\"]*\"|\"deviceId\" value=\"$_deviceId\"|g" $_targetDirectory/Authentication.config 
 	sed -i -e "s|\"moduleName\"\s*value=\"[^\"]*\"|\"moduleName\" value=\"azureiotsecurity\"|g" $_targetDirectory/Authentication.config 
-	sed -i -e "s|\"certificateLocationKind\"\s*value=\"[^\"]*\"|\"certificateLocationKind\" value=\"$_certificateLocationKind\"|g" $_targetDirectory/Authentication.config 
+	sed -i -e "s|\"certificateLocationKind\"\s*value=\"[^\"]*\"|\"certificateLocationKind\" value=\"$_certificateLocationKind\"|g" $_targetDirectory/Authentication.config
+	if [ $_authenticationIdentity == 'DPS' ]; then
+		sed -i -e "s|\"idScope\"\s*value=\"[^\"]*\"|\"idScope\" value=\"$_idScope\"|g" $_targetDirectory/Authentication.config 
+		sed -i -e "s|\"registrationId\"\s*value=\"[^\"]*\"|\"registrationId\" value=\"$_registrationId\"|g" $_targetDirectory/Authentication.config
+	else 
+		sed -i -e "s|\"gatewayHostname\"\s*value=\"[^\"]*\"|\"gatewayHostname\" value=\"$_gwFqdn\"|g" $_targetDirectory/Authentication.config 
+		sed -i -e "s|\"deviceId\"\s*value=\"[^\"]*\"|\"deviceId\" value=\"$_deviceId\"|g" $_targetDirectory/Authentication.config
+	fi
 
 	tempSudoersPath=$_scriptDir/sudoerstemp
 
@@ -93,7 +171,7 @@ set -- ${originalArgs[@]}
 while [ "$1" != "" ]; do
 	case $1 in
 		-aui | --authentication-identity )  shift
-			if [ "$1" = "SecurityModule" ] || [ "$1" = "Device" ]; then
+			if [ "$1" = "SecurityModule" ] || [ "$1" = "Device" ] || [ "$1" = "DPS" ]; then
 				_authenticationIdentity=$1
 			else
 				echo "Possible values for authentication-identity are: SecurityModule or Device"
@@ -118,6 +196,12 @@ while [ "$1" != "" ]; do
 									;;
 		-di | --device-id)  shift
 									_deviceId=$1
+									;;
+		-is | --id-scope)  shift
+									_idScope=$1
+									;;
+		-ri | --registration-id)  shift
+									_registrationId=$1
 									;;
 		-cl | --certificate-location-kind ) shift
 			if [ "$1" = "LocalFile" ] || [ "$1" = "Store" ]; then

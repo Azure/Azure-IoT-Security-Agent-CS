@@ -14,7 +14,7 @@ namespace Microsoft.Azure.IoT.Agent.IoT.MessageWorker.Clients
     /// </summary>
     public class ModuleClientWrapper : IModuleClient
     {
-        private readonly ModuleClient _client;
+        private ModuleClient _client;
 
         /// <summary>
         /// C-tor creates a new wrapper object with the given client
@@ -59,6 +59,20 @@ namespace Microsoft.Azure.IoT.Agent.IoT.MessageWorker.Clients
         public async Task UpdateRportedPropertiesAsync(TwinCollection reported)
         {
             await _client.UpdateReportedPropertiesAsync(reported);
+        }
+
+        /// <inheritdoc />
+        public void SetConnectionStatusChangesHandler(ConnectionStatusChangesHandler statusChangesHandler)
+        {
+            _client.SetConnectionStatusChangesHandler(statusChangesHandler);
+        }
+
+        /// <inheritdoc />
+        public void ReInit(string connectionString, TransportType transportType)
+        {
+            var newClient = ModuleClient.CreateFromConnectionString(connectionString, transportType);
+            _client.Dispose();
+            _client = newClient;
         }
     }
 }

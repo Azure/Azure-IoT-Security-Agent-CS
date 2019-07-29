@@ -4,11 +4,8 @@
 using Microsoft.Azure.IoT.Contracts.Events;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Runtime.Serialization;
 
 namespace Microsoft.Azure.IoT.Agent.Core.Configuration
 {
@@ -21,6 +18,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Configuration
         /// The interval upon which messages with level "High" should be sent 
         /// </summary>
         [JsonProperty(PropertyName = "highPriorityMessageFrequency", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
         [DefaultValue("00:07:00")]
         public TimeSpan HighPriorityMessageFrequency { get; set; }
 
@@ -28,6 +26,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Configuration
         /// The interval upon which messages with level "Low" should be sent 
         /// </summary>
         [DefaultValue("05:00:00")]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
         [JsonProperty(PropertyName = "lowPriorityMessageFrequency", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
         public TimeSpan LowPriorityMessageFrequency { get; set; }
 
@@ -35,6 +34,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Configuration
         /// The interval upon which messages of type "snapshot" should be sent 
         /// </summary>
         [DefaultValue("13:00:00")]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
         [JsonProperty(PropertyName = "snapshotFrequency", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
         public TimeSpan SnapshotFrequency { get; set; }
 
@@ -42,6 +42,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Configuration
         /// The maximum cache size for the event queues
         /// </summary>
         [DefaultValue("2560000")]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
         [JsonProperty(PropertyName = "maxLocalCacheSizeInBytes", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate, NullValueHandling = NullValueHandling.Ignore)]
         public uint MaxLocalCacheSize { get; set; }
 
@@ -49,6 +50,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Configuration
         /// Maximum size of the message that is sent to the hub
         /// </summary>
         [DefaultValue("204800")]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
         [JsonProperty(PropertyName = "maxMessageSizeInBytes", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
         public uint MaxMessageSize { get; set; }
 
@@ -56,6 +58,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Configuration
         /// Diagnostic event with its default priority
         /// </summary>
         [DefaultValue("Low")]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
         [JsonProperty(PropertyName = "eventPriorityDiagnostic", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
         public EventPriority Diagnostic { get; set; }
 
@@ -63,6 +66,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Configuration
         /// ConfigurationError event with its default priority
         /// </summary>
         [DefaultValue("Low")]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
         [JsonProperty(PropertyName = "eventPriorityConfigurationError", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
         public EventPriority ConfigurationError { get; set; }
 
@@ -70,6 +74,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Configuration
         /// DroppedEventsStatistics event with its default priority
         /// </summary>
         [DefaultValue("Low")]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
         [JsonProperty(PropertyName = "eventPriorityDroppedEventsStatistics", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
         public EventPriority DroppedEventsStatistics { get; set; }
 
@@ -77,6 +82,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Configuration
         /// MessageStatistics event with its default priority
         /// </summary>
         [DefaultValue("Low")]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
         [JsonProperty(PropertyName = "eventPriorityMessageStatistics", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
         public EventPriority MessageStatistics { get; set; }
 

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,6 +7,8 @@
     <RootNamespace>Microsoft.Azure.IoT.Agent.Windows</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Deterministic>false</Deterministic>
+	  <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
+    <HighEntropyVA Condition="'$(HighEntropyVA)' == ''">true</HighEntropyVA>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -15,6 +17,8 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>bin\Debug\netcoreapp2.0\Agent.Windows.xml</DocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
   </PropertyGroup>
 
   <ItemGroup>
@@ -49,5 +53,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Core\Agent.Core.csproj" />
   </ItemGroup>
+  
+  <Import Project="..\..\Scripts\PublishAllRids.targets" />
 
 </Project>
