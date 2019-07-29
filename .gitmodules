@@ -1,0 +1,4 @@
+[submodule "Azure-IoT-Security"]
+	path = Azure-IoT-Security
+	url = https://github.com/Azure/Azure-IoT-Security.git
+	branch = master

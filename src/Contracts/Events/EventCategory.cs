@@ -11,7 +11,8 @@ namespace Microsoft.Azure.IoT.Contracts.Events
     {
 #pragma warning disable CS1591
         Triggered,
-        Periodic
+        Periodic,
+        Aggregated
 #pragma warning restore CS1591 
     }
 }

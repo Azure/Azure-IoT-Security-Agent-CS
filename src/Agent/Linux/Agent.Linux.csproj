@@ -6,6 +6,8 @@
     <RootNamespace>Microsoft.Azure.IoT.Agent.Linux</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Deterministic>false</Deterministic>
+	  <RuntimeIdentifiers>ubuntu.16.04-x64;ubuntu.18.04-x64;debian.9-x64</RuntimeIdentifiers>
+    <HighEntropyVA Condition="'$(HighEntropyVA)' == ''">true</HighEntropyVA>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -14,6 +16,8 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>bin\Debug\netcoreapp2.0\Agent.Linux.xml</DocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,4 +49,7 @@
   <ItemGroup>
     <Compile Include="..\AgentAssemblySharedInfo.cs" Link="AgentAssemblySharedInfo.cs" />
   </ItemGroup>
+  
+  <Import Project="..\..\Scripts\PublishAllRids.targets" />
+  
 </Project>

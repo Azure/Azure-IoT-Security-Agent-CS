@@ -31,7 +31,6 @@ namespace Security.Tests.Windows.UnitTests
             /// IPV6 in Windows
             /// </summary>
             [TestMethod]
-            [Ignore("Issue: 4006742")]
             public void ShouldParseWindowsIpv6()
             {
                 const string Input = "  TCP    [2a01:110:68:2c:745a:5970:a2f2:e0f3]:64400  [2a02:26f0:e8:2b3::201a]:80  CLOSE_WAIT";
@@ -104,7 +103,6 @@ namespace Security.Tests.Windows.UnitTests
             /// IPv6 (Any) in Windows
             /// </summary>
             [TestMethod]
-            [Ignore("Issue: 4006742")]
             public void ShouldParseWindowsIpv6Any()
             {
                 const string Input = "  TCP    [::]:445               [::]:0                 LISTENING";
@@ -203,7 +201,6 @@ namespace Security.Tests.Windows.UnitTests
             /// Combination in Windows
             /// </summary>
             [TestMethod]
-            [Ignore("Issue: 4006742")]
             public void ShouldParseWindowsTcpUdpIpv6Ipv4Combination()
             {
                 const string Input = @"  TCP    10.166.83.25:64758     23.64.31.74:443        ESTABLISHED
@@ -215,7 +212,7 @@ namespace Security.Tests.Windows.UnitTests
 
                 Assert.AreEqual("tcp", payloads.First().Protocol);
                 Assert.AreEqual("10.166.83.25", payloads.First().LocalAddress);
-                Assert.AreEqual("23.64.31.74:443", payloads.First().RemoteAddress);
+                Assert.AreEqual("23.64.31.74", payloads.First().RemoteAddress);
                 Assert.AreEqual("64758", payloads.First().LocalPort);
                 Assert.AreEqual("443", payloads.First().RemotePort);
 
@@ -225,11 +222,11 @@ namespace Security.Tests.Windows.UnitTests
                 Assert.AreEqual("7680", payloads.Skip(1).First().LocalPort);
                 Assert.AreEqual("52540", payloads.Skip(1).First().RemotePort);
 
-                Assert.AreEqual("udp", payloads.Skip(1).First().Protocol);
-                Assert.AreEqual("0.0.0.0", payloads.Skip(1).First().LocalAddress);
-                Assert.AreEqual("*", payloads.Skip(1).First().RemoteAddress);
-                Assert.AreEqual("123", payloads.Skip(1).First().LocalPort);
-                Assert.AreEqual("*", payloads.Skip(1).First().RemotePort);
+                Assert.AreEqual("udp", payloads.Skip(2).First().Protocol);
+                Assert.AreEqual("0.0.0.0", payloads.Skip(2).First().LocalAddress);
+                Assert.AreEqual("*", payloads.Skip(2).First().RemoteAddress);
+                Assert.AreEqual("123", payloads.Skip(2).First().LocalPort);
+                Assert.AreEqual("*", payloads.Skip(2).First().RemotePort);
             }
             
             /// <summary>

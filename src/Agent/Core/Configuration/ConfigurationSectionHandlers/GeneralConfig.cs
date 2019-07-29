@@ -6,7 +6,7 @@ using Microsoft.Azure.IoT.Agent.Core.Logging;
 using Microsoft.Azure.IoT.Contracts.Events;
 using System;
 using System.Collections.Specialized;
-using System.Reflection;
+using Microsoft.Azure.IoT.Agent.Core.Utils;
 
 namespace Microsoft.Azure.IoT.Agent.Core.Configuration.ConfigurationSectionHandlers
 {
@@ -136,17 +136,17 @@ namespace Microsoft.Azure.IoT.Agent.Core.Configuration.ConfigurationSectionHandl
         /// <param name="nameValueCollection">nameValueCollection represents the user configuration</param>
         public GeneralConfig(NameValueCollection nameValueCollection)
         {
-            FileLogLevel = (LogLevel)Enum.Parse(typeof(LogLevel), nameValueCollection[FileLogLevelKey]);
-            ReadRemoteConfigurationTimeout = TimeSpan.Parse(nameValueCollection[ReadRemoteConfigurationTimeoutKey]);
-            SchedulerInterval = TimeSpan.Parse(nameValueCollection[SchedulerIntervalKey]);
-            ProducerInterval = TimeSpan.Parse(nameValueCollection[ProducerIntervalKey]);
-            ConsumerInterval = TimeSpan.Parse(nameValueCollection[ConsumerIntervalKey]);
-            HighPriorityQueueSizePercentage = double.Parse(nameValueCollection[HighPriorityQueueSizePercentageKey]);
-            AgentId = Guid.Parse(nameValueCollection[AgentIdKey]);
-            LogLevel = (LogLevel)Enum.Parse(typeof(LogLevel), nameValueCollection[LogLevelKey]);
-            DiagnosticVerbosityLevel = (DiagnosticVerbosity)Enum.Parse(typeof(DiagnosticVerbosity), nameValueCollection[DiagnosticVerbosityLevelKey]);
-            LogFilePath = nameValueCollection[LogFilePathKey];
-            DefaultEventPriority = (EventPriority)Enum.Parse(typeof(EventPriority), nameValueCollection[DefaultEventPriorityKey]);
+                FileLogLevel = nameValueCollection.GetEnumValueThrowOnFail<LogLevel>(FileLogLevelKey);
+                ReadRemoteConfigurationTimeout = nameValueCollection.GetTimeSpanValueThrowOnFail(ReadRemoteConfigurationTimeoutKey);
+                SchedulerInterval = nameValueCollection.GetTimeSpanValueThrowOnFail(SchedulerIntervalKey);
+                ProducerInterval = nameValueCollection.GetTimeSpanValueThrowOnFail(ProducerIntervalKey);
+                ConsumerInterval = nameValueCollection.GetTimeSpanValueThrowOnFail(ConsumerIntervalKey);
+                HighPriorityQueueSizePercentage = nameValueCollection.GetDoubleValueThrowOnFail(HighPriorityQueueSizePercentageKey);
+                AgentId = nameValueCollection.GetGuidValueThrowOnFail(AgentIdKey);
+                LogLevel = nameValueCollection.GetEnumValueThrowOnFail<LogLevel>(LogLevelKey);
+                DiagnosticVerbosityLevel = nameValueCollection.GetEnumValueThrowOnFail<DiagnosticVerbosity>(DiagnosticVerbosityLevelKey);
+                LogFilePath = nameValueCollection.GetStringValueThrowOnFail(LogFilePathKey);
+                DefaultEventPriority = nameValueCollection.GetEnumValueThrowOnFail<EventPriority>(DefaultEventPriorityKey);
         }
     }
 }

@@ -28,11 +28,16 @@ namespace Security.Tests.Common
         public void ShouldHaveAllSupportedEventsDefinedCorrectly()
         {
             Type baseEventType = typeof(IEvent);
+            Type aggregateEventType = typeof(AggregatedEvent<>);
             var eventAssemblies = new Assembly[] { typeof(Login).Assembly, typeof(IEvent).Assembly };
 
             foreach (Assembly assembly in eventAssemblies)
             {
-                IEnumerable<Type> eventTypes = assembly.GetTypes().Where(type => baseEventType.IsAssignableFrom(type) && type != baseEventType && !type.IsAbstract);
+                IEnumerable<Type> eventTypes = assembly.GetTypes()
+                    .Where(baseEventType.IsAssignableFrom)
+                    .Where(type => !type.IsAbstract)
+                    .Except(new [] { baseEventType, aggregateEventType });
+
                 Assert.IsTrue(eventTypes.First() != null);
 
                 Type configurationType = typeof(RemoteSecurityModuleConfiguration);
