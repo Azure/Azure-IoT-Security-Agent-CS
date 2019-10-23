@@ -3,11 +3,13 @@
 _sudoersTemplateName="asotagentsudoers"
 _sudoersIncludeDirectory="/etc/sudoers.d"
 _baselineExecutableLocationTemplate="/BaselineExecutables/"
-_omsBaselineExecutablePath="https://raw.githubusercontent.com/Microsoft/OMS-Agent-for-Linux/master/source/code/plugins/"
+_omsBaselineExecutablePath="https://ascforiot.blob.core.windows.net/public/"
 _baselineDirName="BaselineExecutables"
 _omsAudits="oms_audits.xml"
-_omsBaselineX64="omsbaseline_x64"
-_omsBaselineX86="omsbaseline_x86"
+_omsBaseline="omsbaseline"
+_omsBaselineX64="omsbaseline-linux-amd64"
+_omsBaselineI386="omsbaseline-linux-386"
+_omsBaselineARMv7="omsbaseline-linux-arm-v7"
 _absoluteBaselineExecutableLocationTemplate=
 _authenticationIdentity=
 _authenticationType=
@@ -107,26 +109,40 @@ installSecurityAgent()
     
 	#Get oms executables according to systems architecture
 	baselineDir="$_scriptDir/../$_baselineDirName"
+	baselinePath="$baselineDir/$_omsBaseline"
 	mkdir -p $baselineDir
+
+	# download oms_audits.xml
 	wgetAndExitOnFail "${_omsBaselineExecutablePath}${_omsAudits}" "$baselineDir/$_omsAudits"
 
-    if [ $(uname -m) == 'x86_64' ]; then
-		wgetAndExitOnFail "${_omsBaselineExecutablePath}${_omsBaselineX64}"  "$baselineDir/$_omsBaselineX64"
-        _baselineExecutableLocationTemplate="${_baselineExecutableLocationTemplate}${_omsBaselineX64}"
-		
-    else
-		wgetAndExitOnFail "${_omsBaselineExecutablePath}${_omsBaselineX86}" "$baselineDir/$_omsBaselineX86"
-        _baselineExecutableLocationTemplate="${_baselineExecutableLocationTemplate}${_omsBaselineX86}"
-    fi
+	# download omsbaseline supported architecture
+	case $(uname -m) in
+    'x86_64')
+		wgetAndExitOnFail "${_omsBaselineExecutablePath}${_omsBaselineX64}"  $baselinePath
+		;;
+	'armv7l')
+		wgetAndExitOnFail "${_omsBaselineExecutablePath}${_omsBaselineARMv7}"  $baselinePath
+		;;
+	'i368')
+		wgetAndExitOnFail "${_omsBaselineExecutablePath}${_omsBaselineI386}"  $baselinePath
+		;;
+    *)
+		echo "Not supported architecture"
+        exit 1
+		;;
+	esac
     
+	_baselineExecutableLocationTemplate="${_baselineExecutableLocationTemplate}${_omsBaseline}"
     _absoluteBaselineExecutableLocationTemplate=$_targetDirectory$_baselineExecutableLocationTemplate
 
     prepareEnvironment
 
 	#install security dependencies
     echo installing agent dependencies
-    apt-get install -y auditd
-    apt-get install -y audispd-plugins
+    apt-get install -y \
+		auditd \
+		audispd-plugins \
+		net-tools
 
     #add authentication configuration in app.config
     sed -i -e "s|\"identity\"\s*value=\"[^\"]*\"|\"identity\" value=\"$_authenticationIdentity\"|g" $_targetDirectory/Authentication.config 
@@ -167,6 +183,22 @@ originalArgs=("$@")
 source "$_scriptDir/CoreAgentInstallation.sh" "$@"
 set -- ${originalArgs[@]}
 
+setFilePath(){
+	file=$1
+	dir=$(pwd)
+	if [[ $file == /* ]]
+	then
+		_filePath=$file
+	else
+		_filePath=$dir/$file
+	
+	fi
+	if [ ! -f $_filePath ]; then
+		echo "File $_filePath does not exist!";
+		exit 1;
+	fi
+}
+
 #parse command line arguments
 while [ "$1" != "" ]; do
 	case $1 in
@@ -189,7 +221,7 @@ while [ "$1" != "" ]; do
 			fi	
 									;;		
 		-f | --file-path )  shift
-									_filePath=$1
+									setFilePath $1
 									;;
 		-hn | --host-name )  shift
 									_gwFqdn=$1

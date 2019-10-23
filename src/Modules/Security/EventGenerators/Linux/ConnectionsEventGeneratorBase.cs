@@ -27,7 +27,11 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         public override EventPriority Priority => AgentConfiguration.GetEventPriority<ConnectionCreate>();
 
         /// <inheritdoc />
-        protected override IEnumerable<AuditEventType> AuditEventTypes => new List<AuditEventType> { AuditEventType.ProcessTitle, AuditEventType.ConnectSockaddr };
+        protected override IEnumerable<AuditEventType> AuditEventTypes => new List<AuditEventType>
+        {
+            AuditEventType.ProcessTitle,
+            AuditEventType.ConnectSockaddr
+        };
 
         /// <inheritdoc />
         protected ConnectionsEventGeneratorBase(IProcessUtil processUtil) : base(processUtil)

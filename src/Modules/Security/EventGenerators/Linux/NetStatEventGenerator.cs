@@ -22,6 +22,8 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
     {
         private const int LocalAddressColumnNumber = 3;
         private const int RemoteAddressColumnNumber = 4;
+        private const int PidColumnNumber = 6;
+
         private readonly IProcessUtil _processUtil;
 
         /// <inheritdoc />
@@ -49,9 +51,9 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         protected override List<IEvent> GetEventsImpl()
         {
             //Run netstat and parse the output
-            const string netstatCommand = "netstat -ln";
+            const string netstatCommand = "sudo netstat -tuwpna"; // -tcp -udp -raw -pid -numeric -all
             string content = _processUtil.ExecuteBashShellCommand(netstatCommand);
-            List<ListeningPortsPayload> payloads = NetstatUtils.ParseNetstatListeners(content, LocalAddressColumnNumber, RemoteAddressColumnNumber);
+            List<ListeningPortsPayload> payloads = NetstatUtils.ParseNetstatListeners(content, LocalAddressColumnNumber, RemoteAddressColumnNumber, PidColumnNumber);
 
             SimpleLogger.Debug($"NetstatEventGenerator returns {payloads.Count} payloads");
 

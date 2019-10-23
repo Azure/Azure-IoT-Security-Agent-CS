@@ -24,6 +24,7 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Windows
         private readonly IProcessUtil _processUtil;
         private const int LocalAddressColumnNumber = 1;
         private const int RemoteAddressColumnNumber = 2;
+        private const int PidColumnNumber = 4;
 
         /// <inheritdoc />
         public override EventPriority Priority => AgentConfiguration.GetEventPriority<ListeningPorts>();
@@ -50,10 +51,10 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Windows
         protected override List<IEvent> GetEventsImpl()
         {
             //Run netstat and parse the output
-            //We redirect stderr to /dev/null to avoid root requirements (sudo) 
-            const string netstatCommand = "netstat -an";
+            //We redirect stderr to /dev/null to avoid root requirements (sudo)
+            const string netstatCommand = "netstat -ano"; // -all -numeric -owning process
             string content = _processUtil.ExecuteWindowsCommand(netstatCommand);
-            List<ListeningPortsPayload> payloads = NetstatUtils.ParseNetstatListeners(content, LocalAddressColumnNumber, RemoteAddressColumnNumber);
+            List<ListeningPortsPayload> payloads = NetstatUtils.ParseNetstatListeners(content, LocalAddressColumnNumber, RemoteAddressColumnNumber, PidColumnNumber);
 
             SimpleLogger.Debug($"NetstatEventGenerator returns {payloads.Count} payloads");
 

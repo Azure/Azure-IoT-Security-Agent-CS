@@ -9,7 +9,7 @@ using System.Linq;
 namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux.LocalUser
 {
     /// <summary>
-    /// Helper class for parsing /etc/passwd and /etc/groups 
+    /// Helper class for parsing /etc/passwd and /etc/groups
     /// </summary>
     public static class LocalUsersParser
     {
@@ -20,7 +20,7 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux.LocalUser
         private const int UsersFileUsernameCol = 0;
         private const int UsersFileUidCol = 2;
         private const int UsersFileGidCol = 3;
-        private const int GroupsFileGroupnameCol = 0;
+        private const int GroupsFileGroupNameCol = 0;
         private const int GroupsFileGidCol = 2;
         private const int GroupsFileUsersCol = 3;
 
@@ -45,17 +45,32 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux.LocalUser
         }
 
         /// <summary>
-        /// Parse the content of /etc/group and maps GroupId => GroupName
+        /// Parse the content of /etc/group and maps GroupId => GroupNames
         /// </summary>
         /// <param name="groupsFileContent">The content of /etc/group file</param>
-        /// <returns>Group id to group name dictionary</returns>
+        /// <returns>Group id to group names dictionary</returns>
         private static IDictionary<uint, string> CreateGidToGroupNameDictFromContent(string groupsFileContent)
         {
-            var lines = groupsFileContent.SplitStringOnNewLine();
+            var gidToGroupNameDict = new Dictionary<uint, string>();
+            string[] lines = groupsFileContent.SplitStringOnNewLine();
 
-            return lines.ToDictionary(
-                line => uint.Parse(line.Split(FieldsDelimiter)[GroupsFileGidCol]),
-                line => line.Split(FieldsDelimiter)[GroupsFileGroupnameCol]);
+            foreach (string line in lines)
+            {
+                var parts = line.Split(FieldsDelimiter);
+                uint gid = uint.Parse(parts[GroupsFileGidCol]);
+                string groupName = parts[GroupsFileGroupNameCol];
+
+                string newValue = groupName;
+
+                if (gidToGroupNameDict.TryGetValue(gid, out string groupNames))
+                {
+                    newValue = $"{groupNames}{LocalUsersSnapshotGenerator.SchemaDelimiter}{groupName}";
+                }
+
+                gidToGroupNameDict[gid] = newValue;
+            }
+
+            return gidToGroupNameDict;
         }
 
         /// <summary>

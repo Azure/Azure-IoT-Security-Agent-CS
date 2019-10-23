@@ -102,14 +102,19 @@ function UpdateSecurityConfiguration
     $authenticationConfigPath = "$PSScriptRoot\..\Authentication.config"
 	[System.Xml.Linq.XDocument]$authenticationXmlDoc = [System.Xml.Linq.XDocument]::Load($authenticationConfigPath)
 
+	$filePath = if($FilePath -match "^[a-zA-Z]:\*") {$FilePath} else {"$($PWD.path)\$($FilePath)"}
+	if(!(Test-Path -path $filePath)){
+		throw "File $($filePath) does not exist!"
+	}
+	SetAuthParameter $authenticationXmlDoc "filePath" $filePath
 	SetAuthParameter $authenticationXmlDoc "idScope" $IdScope
 	SetAuthParameter $authenticationXmlDoc "registrationId" $RegistrationId
     SetAuthParameter $authenticationXmlDoc "deviceId" $DeviceId
     SetAuthParameter $authenticationXmlDoc "gatewayHostname" $HostName
-    SetAuthParameter $authenticationXmlDoc "filePath" $FilePath
 	SetAuthParameter $authenticationXmlDoc "moduleName" "azureiotsecurity"
 	SetAuthParameter $authenticationXmlDoc "certificateLocationKind" $CertificateLocationKind
 	SetAuthParameter $authenticationXmlDoc "type" $AuthenticationMethod
+
 
 	$identityValue =  if($AuthenticationIdentity -eq "SecurityModule") {"Module"} else {$AuthenticationIdentity}
     SetAuthParameter $authenticationXmlDoc "identity" $identityValue

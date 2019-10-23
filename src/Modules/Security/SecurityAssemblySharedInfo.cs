@@ -8,4 +8,4 @@ using System.Reflection;
 
 //Agent versioning
 //Version is {Major}.{Minor}.[Minorer].{seconds from midnight / 2}
-[assembly: AssemblyVersion("0.0.4.*")]
+[assembly: AssemblyVersion("0.0.5.*")]

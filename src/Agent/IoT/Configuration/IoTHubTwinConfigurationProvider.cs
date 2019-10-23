@@ -140,7 +140,7 @@ namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
             }
             catch (AggregateException ex) when (ex.InnerException is DeviceNotFoundException)
             {
-                throw new AgentException(ExceptionCodes.Authentication, ExceptionSubCodes.NotFound, "Validate authentication configuration");
+                throw new AgentException(ExceptionCodes.Authentication, ExceptionSubCodes.NotFound, "Device not found. Please make sure you entered the correct device name as it appears in the portal");
             }
             catch (AggregateException ex) when (ex.InnerException is UnauthorizedException)
             {
@@ -148,7 +148,7 @@ namespace Microsoft.Azure.IoT.Agent.IoT.Configuration
             }
             if (!isConfigurationRead)
             {
-                throw new AgentException(ExceptionCodes.RemoteConfiguration, ExceptionSubCodes.Timeout, "Failed to read security module twin in time");
+                throw new AgentException(ExceptionCodes.RemoteConfiguration, ExceptionSubCodes.Timeout, "Failed to read security module twin in time. It may be caused because the hostname is incorrect. Make sure you entered the correct iothub hostname as it appears in the portal.");
             }
 
             Twin twin = twinTask.Result;

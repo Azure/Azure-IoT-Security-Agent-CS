@@ -13,6 +13,9 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
     /// </summary>
     public class InboundConnEventGenerator : ConnectionsEventGeneratorBase
     {
+        /// Auditd accept rule
+        public static readonly string AuditRuleAccept = "-A exit,always -F arch=b{0} -S accept -F success=1";
+
         /// <inheritdoc />
         /// Override the default ausearch "-m EVENTTYPE" convention with "-sc accept"
         protected override string RecordFilteringArguments => "-sc accept";
@@ -22,8 +25,7 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         /// Network audit log should be configured for the syscall accept()
         /// We collect only SUCCESSFUL connection
         /// </summary>
-        protected override IEnumerable<string> AuditRulesPrerequisites { get; } = new List<string>
-        { "-A exit,always -F arch=b64 -S accept -F success=1" };
+        protected override IEnumerable<string> AuditRulesPrerequisites { get; } = AuditEventGeneratorBase.GeneratePrerequisitesRules(InboundConnEventGenerator.AuditRuleAccept);
 
 
         /// <summary>
