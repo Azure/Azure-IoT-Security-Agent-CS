@@ -20,12 +20,11 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
     /// </summary>
     public class ProcessCreationEventGenerator : AuditEventGeneratorBase
     {
+        /// Auditd exec rule
+        public static readonly string AuditRuleExec = "-a always,exit -F arch=b{0} -S execve,execveat";
+
         /// <inheritdoc />
-        protected override IEnumerable<string> AuditRulesPrerequisites => new[]
-        {
-            "-a always,exit -F arch=b32 -S execve,execveat",
-            "-a always,exit -F arch=b64 -S execve,execveat"
-        };
+        protected override IEnumerable<string> AuditRulesPrerequisites { get; } = AuditEventGeneratorBase.GeneratePrerequisitesRules(ProcessCreationEventGenerator.AuditRuleExec);
 
         /// <inheritdoc />
         protected override IEnumerable<AuditEventType> AuditEventTypes => new[] { AuditEventType.ProcessExecution };

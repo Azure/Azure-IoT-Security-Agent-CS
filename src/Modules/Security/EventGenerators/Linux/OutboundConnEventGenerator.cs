@@ -14,6 +14,9 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
     /// </summary>
     public class OutboundConnEventGenerator : ConnectionsEventGeneratorBase
     {
+        /// Auditd connect rule
+        public static readonly string AuditRuleConnect = "-A exit,always -F arch=b{0} -S connect -F success=1";
+
         /// <inheritdoc />
         /// Override the default ausearch "-m EVENTTYPE" convention with "-sc connect"
         protected override string RecordFilteringArguments => "-sc connect";
@@ -23,8 +26,7 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         /// Network audit log should be configured for the syscall connect()
         /// Collect only succesful connections
         /// </summary>
-        protected override IEnumerable<string> AuditRulesPrerequisites { get; } = new List<string>
-        { "-A exit,always -F arch=b64 -S connect -F success=1" };
+        protected override IEnumerable<string> AuditRulesPrerequisites { get; } = AuditEventGeneratorBase.GeneratePrerequisitesRules(OutboundConnEventGenerator.AuditRuleConnect);
 
         /// <summary>
         /// Ctor - creates a new event generator

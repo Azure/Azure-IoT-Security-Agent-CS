@@ -96,6 +96,31 @@ namespace Microsoft.Azure.Security.IoT.Agent.Common
         [JsonProperty(PropertyName = "eventPriorityOSBaseline", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
         public EventPriority OSBaseline { get; set; }
 
+
+        /// <summary>
+        /// Baseline custom checks configuration mode
+        /// </summary>
+        [DefaultValue(false)]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
+        [JsonProperty(PropertyName = "baselineCustomChecksEnabled", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
+        public bool BaselineCustomChecksEnabled { get; set; }
+
+        /// <summary>
+        /// Baseline custom checks configuration absolute file path
+        /// </summary>
+        [DefaultValue(null)]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
+        [JsonProperty(PropertyName = "baselineCustomChecksFilePath", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
+        public String BaselineCustomChecksFilePath { get; set; }
+
+        /// <summary>
+        /// Baseline custom checks configuration file hash
+        /// </summary>
+        [DefaultValue(null)]
+        [JsonConverter(typeof(RemoteConfigurationPnPConverter))]
+        [JsonProperty(PropertyName = "baselineCustomChecksFileHash", DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
+        public String BaselineCustomChecksFileHash { get; set; }
+
         /// <summary>
         /// Enable event aggregation for process create
         /// </summary>

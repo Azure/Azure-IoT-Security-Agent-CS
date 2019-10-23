@@ -95,6 +95,24 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         }
 
         /// <summary>
+        /// Generate prerequisites rules based on architecture
+        /// </summary>
+        protected static IEnumerable<string> GeneratePrerequisitesRules(string rule)
+        {
+            var rules = new List<string>();
+            rules.Add(
+                string.Format(rule, "32")
+            );
+            if (System.Environment.Is64BitOperatingSystem)
+            {
+                rules.Add(
+                    string.Format(rule, "64")
+                );
+            }
+            return rules;
+        }
+
+        /// <summary>
         /// The actual implementation of GetEvents for the particular generator, converts audit events to security events
         /// </summary>
         /// <param name="auditEvents">List of audit events according to which security events will be generated</param>
@@ -124,7 +142,7 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         {
             //If error message indicates no matches than consider error as handled
             return errorMessage == AusearchNoMatchesText
-                ? ErrorHandlerResult.ErrorHandled 
+                ? ErrorHandlerResult.ErrorHandled
                 : ErrorHandlerResult.ErrorNotHandled;
         }
 

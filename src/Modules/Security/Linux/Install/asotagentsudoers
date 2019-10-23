@@ -2,6 +2,7 @@
 {USER} ALL=(root) NOPASSWD: /sbin/auditctl -a *
 {USER} ALL=(root) NOPASSWD: /sbin/auditctl -w *
 {USER} ALL=(root) NOPASSWD: /sbin/ausearch
+{USER} ALL=(root) NOPASSWD: /bin/netstat -tuwpna
 {USER} ALL=(root) NOPASSWD: /bin/cat /etc/passwd
 {USER} ALL=(root) NOPASSWD: /bin/cat /etc/group
 {USER} ALL=(root) NOPASSWD: {PATH_TO_OMSBASELINE_EXECUTABLE}

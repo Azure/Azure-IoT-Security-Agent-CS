@@ -19,6 +19,7 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
     /// </summary>
     public class UserLoginEventGenerator : AuditEventGeneratorBase
     {
+        private const string SudoExecutableName = "/bin/sudo"; 
         /// <inheritdoc />
         public override EventPriority Priority => AgentConfiguration.GetEventPriority<Login>();
 
@@ -43,7 +44,13 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         /// <inheritdoc />
         protected override IEnumerable<IEvent> GetEventsImpl(IEnumerable<AuditEvent> auditEvents)
         {
-            return auditEvents.Select(AuditEventToDeviceEvent).ToList();
+            return auditEvents.Where(auditEvent => {
+            // We want to monitor only local login operations but auditd "USER_AUTH" type includes sudo commands too.
+            // The following expression makes sure to include only login operations and ignore sudo commands.
+                var exec = auditEvent.GetPropertyValue(AuditEvent.AuditMessageProperty.Executable);
+                return !(auditEvent.Type == AuditEventType.UserAuth && exec.EndsWith(SudoExecutableName));
+            })
+            .Select(AuditEventToDeviceEvent).ToList();
         }
 
         /// <summary>

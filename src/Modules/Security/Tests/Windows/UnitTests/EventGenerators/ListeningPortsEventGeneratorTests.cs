@@ -51,7 +51,7 @@ namespace Security.Tests.Windows.UnitTests.EventGenerators
             public void ShouldUseExpectedCommand()
             {
                 _generator.GetEvents();
-                _processUtilMock.Verify(m => m.ExecuteProcess(@"C:\Windows\System32\cmd.exe", "/C \"netstat -an\"", It.IsAny<ErrorHandler>(), It.IsAny<IEnumerable<int>>()), Times.Once);
+                _processUtilMock.Verify(m => m.ExecuteProcess(@"C:\Windows\System32\cmd.exe", "/C \"netstat -ano\"", It.IsAny<ErrorHandler>(), It.IsAny<IEnumerable<int>>()), Times.Once);
             }
 
             /// <summary>

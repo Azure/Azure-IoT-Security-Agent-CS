@@ -4,9 +4,11 @@
 
 using Microsoft.Azure.IoT.Agent.Core.Configuration;
 using Microsoft.Azure.IoT.Agent.Core.EventGeneration;
+using Microsoft.Azure.IoT.Agent.Core.Exceptions;
 using Microsoft.Azure.IoT.Agent.Core.Logging;
 using Microsoft.Azure.IoT.Agent.Core.Utils;
 using Microsoft.Azure.IoT.Contracts.Events;
+using Microsoft.Azure.Security.IoT.Agent.Common;
 using Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux.OsBaseline;
 using Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux.Utils;
 using Microsoft.Azure.Security.IoT.Contracts.Events.Events;
@@ -28,9 +30,14 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         private readonly IProcessUtil _processUtil;
 
         /// <summary>
-        /// The command to execute to run the baseline rules
+        /// The command to execute the baseline rules
         /// </summary>
-        private const string BaselineExecCommandTemplate = @"sudo {0}/BaselineExecutables/omsbaseline_{1} -d {0}/BaselineExecutables/";
+        private const string BaselineExecCommandTemplate = @"sudo {0}/BaselineExecutables/omsbaseline -d {0}/BaselineExecutables/";
+
+        /// <summary>
+        /// The command to execute custom checks baseline
+        /// </summary>
+        private const string BaselineCustomCheckExecCommandTemplate = @"sudo {0}/BaselineExecutables/omsbaseline -ccfp {1} -ccfh {2}";
 
         /// <inheritdoc />
         public override EventPriority Priority => AgentConfiguration.GetEventPriority<OSBaseline>();
@@ -50,15 +57,23 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         }
 
         /// <summary>
-        /// Run the baseline scan and get the results as a baseline event
+        /// OMSBaseline custom checks configuration enabled predicate
         /// </summary>
-        /// <returns>Baseline event</returns>
-        protected override List<IEvent> GetEventsImpl()
+        public static bool IsCustomChecksEnabled()
         {
-            string agentDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            RemoteSecurityModuleConfiguration agentConfiguration = ((RemoteSecurityModuleConfiguration)AgentConfiguration.RemoteConfiguration);
 
-            string bitnessSuffix = RuntimeInformation.OSArchitecture == Architecture.Arm64 || RuntimeInformation.OSArchitecture == Architecture.X64 ? "x64" : "x86";
-            string output = _processUtil.ExecuteBashShellCommand(string.Format(BaselineExecCommandTemplate, agentDirectory, bitnessSuffix));
+            return agentConfiguration.BaselineCustomChecksEnabled && 
+                !string.IsNullOrWhiteSpace(agentConfiguration.BaselineCustomChecksFilePath) &&
+                !string.IsNullOrWhiteSpace(agentConfiguration.BaselineCustomChecksFileHash);
+        }
+
+        /// <summary>
+        /// OMSBaseline custom checks configuration enabled predicate
+        /// </summary>
+        protected IEnumerable<BaselinePayload> ExecuteBaseline(string command)
+        {
+            string output = _processUtil.ExecuteBashShellCommand(command);
 
             if (string.IsNullOrWhiteSpace(output))
             {
@@ -81,8 +96,49 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
 
             SimpleLogger.Debug($"BaselineEventGenerator returns {payloads.Count()} payloads");
 
-            var ev = new OSBaseline(Priority, payloads.ToArray());
-            return new List<IEvent> { ev };
+            return payloads;
+        }
+
+        /// <summary>
+        /// Run the baseline scan and get the results as a baseline event
+        /// </summary>
+        /// <returns>Baseline event</returns>
+        protected override List<IEvent> GetEventsImpl()
+        {
+            // resolve agent directory
+            string agentDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+            // default baseline compliance checks payload
+            List<BaselinePayload> defaultBaselinePayload = ExecuteBaseline(string.Format(BaselineExecCommandTemplate, agentDirectory)).ToList();
+
+            if (BaselineEventGenerator.IsCustomChecksEnabled())
+            {
+                try 
+                {
+                    RemoteSecurityModuleConfiguration agentConfiguration = ((RemoteSecurityModuleConfiguration)AgentConfiguration.RemoteConfiguration);
+
+                    IEnumerable<BaselinePayload> customBaselinePayload = ExecuteBaseline(string.Format(
+                            BaselineCustomCheckExecCommandTemplate, 
+                            agentDirectory,
+                            agentConfiguration.BaselineCustomChecksFilePath,
+                            agentConfiguration.BaselineCustomChecksFileHash
+                        )
+                    );
+
+                    defaultBaselinePayload.AddRange(customBaselinePayload);
+                }
+                catch (CommandExecutionFailedException ex)
+                {  
+                    SimpleLogger.Error($"BaselineEventGenerator failed to execute custom checks, {ex.Message}");
+                }
+            }
+
+            OSBaseline osbaselineEvent = new OSBaseline(
+                Priority, 
+                defaultBaselinePayload.ToArray()
+            );
+
+            return new List<IEvent>() { osbaselineEvent };
         }
 
         /// <summary>

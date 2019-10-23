@@ -27,7 +27,7 @@ namespace Microsoft.Azure.IoT.Agent.Core.Exceptions
         public int ExitCode { get; }
 
         /// <inheritdoc />
-        public override string Message => $"the command [{Command}] exited with code [{ExitCode}] and an eror of [{Error}]";
+        public override string Message => $"the command [{Command}] exited with code [{ExitCode}] and an error of [{Error}]";
 
         /// <summary>
         /// C-tor 

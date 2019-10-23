@@ -21,6 +21,11 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
     /// </summary>
     public class LocalUsersSnapshotGenerator : SnapshotEventGenerator
     {
+        /// <summary>
+        /// Schema plural values delimiter
+        /// </summary>
+        public static readonly char SchemaDelimiter = ';';
+
         private readonly IProcessUtil _processUtil;
 
         #region Consts - Shell Commands
@@ -29,7 +34,6 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         private const string GetGroupListCommand = "cat /etc/group";
 
         #endregion
-        private const char SchemaDelimiter = ';';
 
         /// <inheritdoc />
         public override EventPriority Priority => AgentConfiguration.GetEventPriority<LocalUsers>();
@@ -70,7 +74,7 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
                     priority: Priority,
                     payloads:localUsersPayloads )
             };
-        }       
+        }
         #region Private Methods
 
         /// <summary>
