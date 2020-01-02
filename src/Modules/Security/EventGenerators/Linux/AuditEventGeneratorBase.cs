@@ -27,6 +27,8 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         private const int AusearchCheckpointProcessingError = 11;
         private const int AusearchCheckpointEventNotFoundInLog = 12;
 
+        private string UnameMachine = null;
+
         private readonly IProcessUtil _processUtil;
 
         /// <summary>
@@ -59,9 +61,12 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         {
             _processUtil = processUtil;
 
+            string unameMachine = this.GetUnameMachine();
+
             foreach (string rule in AuditRulesPrerequisites)
             {
-                string command = $"sudo auditctl {rule}";
+                string formattedRule = string.Format(rule, unameMachine);
+                string command = $"sudo auditctl {formattedRule}";
 
                 try
                 {
@@ -95,21 +100,21 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux
         }
 
         /// <summary>
-        /// Generate prerequisites rules based on architecture
+        /// The actual implementation of GetEvents for the particular generator, converts audit events to security events
         /// </summary>
-        protected static IEnumerable<string> GeneratePrerequisitesRules(string rule)
+        public string GetUnameMachine()
         {
-            var rules = new List<string>();
-            rules.Add(
-                string.Format(rule, "32")
-            );
-            if (System.Environment.Is64BitOperatingSystem)
+            try
             {
-                rules.Add(
-                    string.Format(rule, "64")
-                );
+                this.UnameMachine = _processUtil.ExecuteBashShellCommand("uname -m").TrimEnd('\n');
             }
-            return rules;
+            catch (CommandExecutionFailedException ex)
+            {
+                SimpleLogger.Error($"Couldn't resolve OS architecture, error=[{ex.Error}");
+                throw;
+            }
+
+            return this.UnameMachine;
         }
 
         /// <summary>

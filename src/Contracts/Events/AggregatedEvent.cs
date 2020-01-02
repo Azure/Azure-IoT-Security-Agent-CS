@@ -35,19 +35,20 @@ namespace Microsoft.Azure.IoT.Contracts.Events
         /// <param name="priority">event priority</param>
         /// <param name="eventName">event name</param>
         /// <returns>new aggregated event</returns>
-        public AggregatedEvent(EventType type, EventPriority priority, string eventName, TPayload payload, int hitCount, DateTime start, DateTime end)
-            : base(priority, payload)
+        public AggregatedEvent(EventType type, EventPriority priority, string eventName, TPayload payload, int hitCount, DateTime start, DateTime end) 
+        : base(priority, payload)
         {
             Name = eventName;
             EventType = type;
-            payload.ExtraDetails = new Dictionary<string, string>
+            if (payload.ExtraDetails == null)
             {
-                { "StartTimeLocal", start.ToLocalTime().ToString(CultureInfo.InvariantCulture) },
-                { "StartTimeUtc", start.ToUniversalTime().ToString(CultureInfo.InvariantCulture) },
-                { "EndTimeLocal", end.ToLocalTime().ToString(CultureInfo.InvariantCulture) },
-                { "EndTimeUtc", end.ToUniversalTime().ToString(CultureInfo.InvariantCulture) },
-                { "HitCount", hitCount.ToString() }
-            };
+                payload.ExtraDetails = new Dictionary<string, string>();
+            }
+            payload.ExtraDetails.Add("StartTimeLocal", start.ToLocalTime().ToString(CultureInfo.InvariantCulture));
+            payload.ExtraDetails.Add("StartTimeUtc", start.ToUniversalTime().ToString(CultureInfo.InvariantCulture));
+            payload.ExtraDetails.Add("EndTimeLocal", end.ToLocalTime().ToString(CultureInfo.InvariantCulture));
+            payload.ExtraDetails.Add("EndTimeUtc", end.ToUniversalTime().ToString(CultureInfo.InvariantCulture));
+            payload.ExtraDetails.Add("HitCount", hitCount.ToString());
         }
     }
 }

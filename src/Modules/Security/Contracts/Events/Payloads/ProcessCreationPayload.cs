@@ -44,6 +44,11 @@ namespace Microsoft.Azure.Security.IoT.Contracts.Events.Payloads
         public string CommandLine { get; set; }
 
         /// <summary>
+        /// The executable hash
+        /// </summary>
+        public string Hash { get; set; }
+
+        /// <summary>
         /// The The time the event happened
         /// </summary>
         [JsonIgnore]

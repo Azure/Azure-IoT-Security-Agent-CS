@@ -46,6 +46,13 @@ namespace Agent.Tests.Linux.UnitTests.EventGenerators.AuditdEventGenerators
         {
             base.Init();
             MockedShell = new Mock<IProcessUtil>();
+            MockedShell.Setup(m => m.ExecuteProcess(
+                It.IsAny<string>(),
+                It.Is<string>(cmd => cmd.Contains("uname -m")),
+                It.IsAny<ErrorHandler>(),
+                It.IsAny<IEnumerable<int>>())
+            ).Returns("X86_64");
+
             GeneratorUnderTest = CreateInstance(MockedShell.Object);
         }
 

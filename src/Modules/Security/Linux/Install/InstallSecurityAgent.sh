@@ -19,6 +19,7 @@ _deviceId=
 _certificateLocationKind=
 _idScope=
 _registrationId=
+_reboot=false
 _scriptDir=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 _installUsageExtendedDescription=" -aui <authentication identity> -aum <authentication method> -f <file path> -hn <host name> -di <device id> [-cl <certificate location kind>]"
 _optionsExtendedDescription="\
@@ -28,8 +29,9 @@ _optionsExtendedDescription="\
   -hn  --host-name                  IoT hub's host name.\n\
   -di  --device-id                  Id of the device the agent is beind installed on (as defined in the IoT hub).\n\
   -cl  --certificate-location-kind  Location kind of certificate being used (LocalFile or Store). Applicable only when the authentication method is set to SelfSignedCertificate.\n\
-  -is  --id-scope					The ID Scope of the DPS service\n\
-  -ri  --registration-id			The registration ID of the device, as registered in the DPS service"
+  -is  --id-scope                   The ID Scope of the DPS service\n\
+  -r   --reboot                     Specifies whether to do an automatic reboot when installation finished\n\
+  -ri  --registration-id            The registration ID of the device, as registered in the DPS service"
 
 uninstallSecurityAgent()
 {
@@ -177,11 +179,29 @@ installSecurityAgent()
     chmod +x $_absoluteBaselineExecutableLocationTemplate
 
 	installagent
+
+	setupIMAPolicy
 }
 
 originalArgs=("$@")
 source "$_scriptDir/CoreAgentInstallation.sh" "$@"
-set -- ${originalArgs[@]}
+
+setupIMAPolicy(){
+	mkdir -p /etc/ima
+	echo "audit func=BPRM_CHECK mask=MAY_EXEC" > /etc/ima/ima-policy
+    if [[ $_reboot == true ]]
+    then
+        sudo reboot;
+    else
+        echo "A reboot is required to complete agent installation."
+        read  -p "Do you wish to do it now?[y/n]" answer
+        case $answer in
+            [Yy]* ) sudo reboot; break;;
+            [Nn]* ) echo "To take full advantage of the security agent capabilities, make sure you reboot your device later.";;
+            * ) echo "Please answer yes or no.";;
+        esac
+    fi
+}
 
 setFilePath(){
 	file=$1
@@ -229,6 +249,9 @@ while [ "$1" != "" ]; do
 		-di | --device-id)  shift
 									_deviceId=$1
 									;;
+		-r | --reboot )     shift
+                                    _reboot=true
+                                    ;;
 		-is | --id-scope)  shift
 									_idScope=$1
 									;;
