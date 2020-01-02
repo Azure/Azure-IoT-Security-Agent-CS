@@ -22,6 +22,8 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux.Audit
         ConnectSockaddr,
         [Display(Name = "SYSCALL")]
         ConnectSyscall,
+        [Display(Name = "INTEGRITY_RULE")]
+        Integrity,
         [Display(Name = "EXECVE")]
         ProcessExecution
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

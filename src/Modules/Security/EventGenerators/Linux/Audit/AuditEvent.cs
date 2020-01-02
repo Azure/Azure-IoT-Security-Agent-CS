@@ -1,4 +1,5 @@
-﻿// <copyright file="AuditEvent.cs" company="Microsoft">
+﻿using System.Net.WebSockets;
+// <copyright file="AuditEvent.cs" company="Microsoft">
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 
@@ -56,7 +57,11 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux.Audit
             [Display(Name = "saddr")]
             SocketAddress,
             [Display(Name = "argc")]
-            ProcessArgCount
+            ProcessArgCount,
+            [Display(Name = "hash")]
+            ExecutableHash,
+            [Display(Name = "file")]
+            FilePath,
         }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
@@ -201,7 +206,9 @@ namespace Microsoft.Azure.Security.IoT.Agent.EventGenerators.Linux.Audit
                     }
                 }
             }
-
+            if(messageData.ContainsKey(AuditMessageProperty.FilePath)){
+                messageData[AuditMessageProperty.Executable] = messageData[AuditMessageProperty.FilePath];
+            }
             AuditEventType type = (AuditEventType) TypeRegex.Match(eventText).Value.ParseFromDisplayName<AuditEventType>();
             string eventId = IdRegex.Match(eventText).Value;
             DateTime eventTimeUTC = TimeUtils.FromUnixTime(eventId.Split(':').First());
