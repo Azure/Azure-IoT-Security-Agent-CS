@@ -102,7 +102,7 @@ function UpdateSecurityConfiguration
     $authenticationConfigPath = "$PSScriptRoot\..\Authentication.config"
 	[System.Xml.Linq.XDocument]$authenticationXmlDoc = [System.Xml.Linq.XDocument]::Load($authenticationConfigPath)
 
-	$filePath = if($FilePath -match "^[a-zA-Z]:\*") {$FilePath} else {"$($PWD.path)\$($FilePath)"}
+	$filePath = if($FilePath -match "^[a-zA-Z]:\\.*") {$FilePath} else {"$($PWD.path)\$($FilePath)"}
 	if(!(Test-Path -path $filePath)){
 		throw "File $($filePath) does not exist!"
 	}
